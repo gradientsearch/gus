@@ -15,7 +15,7 @@ type Config struct {
 
 // Routes adds specific routes for this group.
 func Routes(app *web.App, cfg Config) {
-	api := newAPI(cfg.Build, cfg.Log)
+	api := newAPI(cfg.Build, cfg.Log, cfg.DB)
 
 	app.HandleFuncNoMiddleware("GET /liveness", api.liveness)
 	app.HandleFuncNoMiddleware("GET /readiness", api.readiness)

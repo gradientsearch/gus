@@ -5,10 +5,17 @@ POSTGRES        := postgres:16.2
 
 KIND_CLUSTER    := guster
 NAMESPACE       := gus-system
-GUS_APP         := gus
-BASE_IMAGE_NAME := localhost/gradientsearch
+
 VERSION         := 0.0.1
+
+GUS_APP         := gus
+AUTH_APP        := auth
+
+BASE_IMAGE_NAME := localhost/gradientsearch
+
 GUS_IMAGE       := $(BASE_IMAGE_NAME)/$(GUS_APP):$(VERSION)
+AUTH_IMAGE      := $(BASE_IMAGE_NAME)/$(AUTH_APP):$(VERSION)
+
 
 
 # ==================================================================================================
@@ -30,12 +37,19 @@ curl-ready:
 # ==============================================================================
 # Building containers
 
-build: gus
+build: gus auth
 
 gus:
 	docker build \
 		-f zarf/docker/dockerfile.gus \
 		-t $(GUS_IMAGE) \
+		--build-arg BUILD_REF=$(VERSION) \
+		--build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
+		.
+auth:
+	docker build \
+		-f zarf/docker/dockerfile.auth \
+		-t $(AUTH_IMAGE) \
 		--build-arg BUILD_REF=$(VERSION) \
 		--build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
 		.
@@ -58,15 +72,26 @@ dev-down:
 dev-status:
 	watch -n 2 kubectl get pods -o wide --all-namespaces
 
+dev-load-db:
+	kind load docker-image $(POSTGRES) --name $(KIND_CLUSTER)
+
 dev-load:
 	kind load docker-image $(GUS_IMAGE) --name $(KIND_CLUSTER)
+	kind load docker-image $(AUTH_IMAGE) --name $(KIND_CLUSTER)
 
 dev-apply:
+	kustomize build zarf/k8s/dev/database | kubectl apply -f -
+	kubectl rollout status --namespace=$(NAMESPACE) --watch --timeout=120s sts/database
+
+	kustomize build zarf/k8s/dev/auth | kubectl apply -f -
+	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(AUTH_APP) --timeout=120s --for=condition=Ready
+
 	kustomize build zarf/k8s/dev/gus | kubectl apply -f -
 	kubectl wait pods --namespace=$(NAMESPACE) --selector app=$(GUS_APP) --timeout=120s --for=condition=Ready
 
 dev-restart:
 	kubectl rollout restart deployment $(GUS_APP) --namespace=$(NAMESPACE)
+	kubectl rollout restart deployment $(AUTH_APP) --namespace=$(NAMESPACE)
 
 # --------------------------------------------------------------------------------------------------
 

@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
-	"github.com/gradientsearch/gus/api/cmd/auth/build/all"
+	"github.com/gradientsearch/gus/api/cmd/services/auth/build/all"
 	"github.com/gradientsearch/gus/api/http/api/debug"
 	"github.com/gradientsearch/gus/api/http/api/mux"
 	"github.com/gradientsearch/gus/app/api/auth"

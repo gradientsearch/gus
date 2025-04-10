@@ -16,6 +16,7 @@ import (
 	"github.com/gradientsearch/gus/api/cmd/services/gus/build/all"
 	"github.com/gradientsearch/gus/api/http/api/debug"
 	"github.com/gradientsearch/gus/api/http/api/mux"
+	"github.com/gradientsearch/gus/business/api/sqldb"
 	"github.com/gradientsearch/gus/foundation/logger"
 )
 
@@ -45,10 +46,22 @@ func run(ctx context.Context, log *logger.Logger) error {
 			DebugHost          string        `conf:"default:0.0.0.0:3010"`
 			CORSAllowedOrigins []string      `conf:"default:*,mask"`
 		}
+		Auth struct {
+			Host string `conf:"default:http://auth-service.gus-system.svc.cluster.local:6000"`
+		}
+		DB struct {
+			User         string `conf:"default:postgres"`
+			Password     string `conf:"default:postgres,mask"`
+			HostPort     string `conf:"default:database-service.gus-system.svc.cluster.local"`
+			Name         string `conf:"default:postgres"`
+			MaxIdleConns int    `conf:"default:2"`
+			MaxOpenConns int    `conf:"default:0"`
+			DisableTLS   bool   `conf:"default:true"`
+		}
 	}{
 		Version: conf.Version{
 			Build: build,
-			Desc:  "Gus",
+			Desc:  "GUS",
 		},
 	}
 
@@ -76,6 +89,25 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	expvar.NewString("build").Set(cfg.Build)
 
+	// -------------------------------------------------------------------------
+	// Database Support
+
+	log.Info(ctx, "startup", "status", "initializing database support", "hostport", cfg.DB.HostPort)
+
+	db, err := sqldb.Open(sqldb.Config{
+		User:         cfg.DB.User,
+		Password:     cfg.DB.Password,
+		HostPort:     cfg.DB.HostPort,
+		Name:         cfg.DB.Name,
+		MaxIdleConns: cfg.DB.MaxIdleConns,
+		MaxOpenConns: cfg.DB.MaxOpenConns,
+		DisableTLS:   cfg.DB.DisableTLS,
+	})
+	if err != nil {
+		return fmt.Errorf("connecting to db: %w", err)
+	}
+
+	defer db.Close()
 	// -------------------------------------------------------------------------
 	// Start Debug Service
 

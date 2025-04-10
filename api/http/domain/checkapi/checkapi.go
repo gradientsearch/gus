@@ -8,20 +8,23 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/gradientsearch/gus/business/api/sqldb"
 	"github.com/gradientsearch/gus/foundation/logger"
 	"github.com/gradientsearch/gus/foundation/web"
+	"github.com/jmoiron/sqlx"
 )
 
 type api struct {
 	build string
 	log   *logger.Logger
+	db    *sqlx.DB
 }
 
-func newAPI(build string, log *logger.Logger) *api {
+func newAPI(build string, log *logger.Logger, db *sqlx.DB) *api {
 	return &api{
 		build: build,
-
-		log: log,
+		db:    db,
+		log:   log,
 	}
 }
 
@@ -31,6 +34,12 @@ func (api *api) readiness(ctx context.Context, w http.ResponseWriter, r *http.Re
 
 	status := "ok"
 	statusCode := http.StatusOK
+
+	if err := sqldb.StatusCheck(ctx, api.db); err != nil {
+		status = "db not ready"
+		statusCode = http.StatusInternalServerError
+		api.log.Info(ctx, "readiness failure", "status", status)
+	}
 
 	data := struct {
 		Status string `json:"status"`
