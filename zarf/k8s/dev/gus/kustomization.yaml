@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base/gus/
+
+images:
+  - name: gus-image
+    newName: localhost/gradientsearch/gus
+    newTag: 0.0.1
