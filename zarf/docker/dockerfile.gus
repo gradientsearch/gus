@@ -1,0 +1,30 @@
+# Build the Go Binary.
+FROM golang:1.23 AS build_gus
+ENV CGO_ENABLED=0
+ARG BUILD_REF
+
+# Copy the source code into the container.
+COPY . /service
+
+
+# Build the service binary.
+WORKDIR /service/api/cmd/services/gus
+RUN go build -ldflags "-X main.build=${BUILD_REF}"
+
+
+# Run the Go Binary in Alpine.
+FROM alpine:3.19
+ARG BUILD_DATE
+ARG BUILD_REF
+RUN addgroup -g 1000 -S gus && \
+    adduser -u 1000 -h /service -G gus -S gus
+COPY --from=build_gus --chown=gus:gus /service/api/cmd/services/gus/gus /service/gus
+WORKDIR /service
+USER gus
+CMD ["./gus"]
+
+LABEL org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.title="gus-api" \
+      org.opencontainers.image.authors="Stephen O'Dwyer" \
+      org.opencontainers.image.source="https://github.com/gradientsearch/gus/tree/master/a/services/gus" \
+      org.opencontainers.image.revision="${BUILD_REF}"
