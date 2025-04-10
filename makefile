@@ -6,16 +6,15 @@ VERSION       := 0.0.1
 GUS_IMAGE     := $(BASE_IMAGE_NAME)/$(GUS_APP):$(VERSION)
 
 
-
 # ==================================================================================================
 # Debug support
 
-
 run:
-	go run apis/services/sales/main.go
+	go run api/cmd/services/gus/main.go |  go run api/cmd/tooling/logfmt/main.go
+	 
 
 drun:
-	docker run -p 3000:3000 $(GUS_IMAGE)
+	  docker rm -f gus-test && docker run -p 3000:3000 --name gus-test $(GUS_IMAGE) |  go run api/cmd/tooling/logfmt/main.go 
 
 
 # ==============================================================================
