@@ -13,27 +13,52 @@ import (
 	"time"
 
 	"github.com/ardanlabs/conf/v3"
-	"github.com/gradientsearch/gus/api/cmd/services/gus/build/all"
+	"github.com/gradientsearch/gus/api/cmd/services/auth/build/all"
 	"github.com/gradientsearch/gus/api/http/api/debug"
 	"github.com/gradientsearch/gus/api/http/api/mux"
+	"github.com/gradientsearch/gus/app/api/auth"
 	"github.com/gradientsearch/gus/business/api/sqldb"
+	"github.com/gradientsearch/gus/foundation/keystore"
 	"github.com/gradientsearch/gus/foundation/logger"
+	"github.com/gradientsearch/gus/foundation/web"
 )
 
 var build = "develop"
 
 func main() {
-	l := logger.New(os.Stdout, logger.LevelInfo, "GUS", nil)
-	if err := run(context.Background(), l); err != nil {
+	var log *logger.Logger
+
+	events := logger.Events{
+		Error: func(ctx context.Context, r logger.Record) {
+			log.Info(ctx, "******* SEND ALERT *******")
+		},
+	}
+
+	traceIDFn := func(ctx context.Context) string {
+		return web.GetTraceID(ctx)
+	}
+
+	log = logger.NewWithEvents(os.Stdout, logger.LevelInfo, "AUTH", traceIDFn, events)
+
+	// -------------------------------------------------------------------------
+
+	ctx := context.Background()
+
+	if err := run(ctx, log); err != nil {
+		log.Error(ctx, "startup", "msg", err)
 		os.Exit(1)
 	}
 }
 
 func run(ctx context.Context, log *logger.Logger) error {
+
 	// -------------------------------------------------------------------------
 	// GOMAXPROCS
 
 	log.Info(ctx, "startup", "GOMAXPROCS", runtime.GOMAXPROCS(0))
+
+	// -------------------------------------------------------------------------
+	// Configuration
 
 	cfg := struct {
 		conf.Version
@@ -42,12 +67,14 @@ func run(ctx context.Context, log *logger.Logger) error {
 			WriteTimeout       time.Duration `conf:"default:10s"`
 			IdleTimeout        time.Duration `conf:"default:120s"`
 			ShutdownTimeout    time.Duration `conf:"default:20s"`
-			APIHost            string        `conf:"default:0.0.0.0:3000"`
-			DebugHost          string        `conf:"default:0.0.0.0:3010"`
-			CORSAllowedOrigins []string      `conf:"default:*,mask"`
+			APIHost            string        `conf:"default:0.0.0.0:6000"`
+			DebugHost          string        `conf:"default:0.0.0.0:6100"`
+			CORSAllowedOrigins []string      `conf:"default:*"`
 		}
 		Auth struct {
-			Host string `conf:"default:http://auth-service.gus-system.svc.cluster.local:6000"`
+			KeysFolder string `conf:"default:zarf/keys/"`
+			ActiveKID  string `conf:"default:54bb2165-71e1-41a6-af3e-7da4a0e1e2c1"`
+			Issuer     string `conf:"default:service project"`
 		}
 		DB struct {
 			User         string `conf:"default:postgres"`
@@ -61,11 +88,11 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}{
 		Version: conf.Version{
 			Build: build,
-			Desc:  "GUS",
+			Desc:  "Auth",
 		},
 	}
 
-	const prefix = "GUS"
+	const prefix = "AUTH"
 	help, err := conf.Parse(prefix, &cfg)
 	if err != nil {
 		if errors.Is(err, conf.ErrHelpWanted) {
@@ -75,7 +102,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		return fmt.Errorf("parsing config: %w", err)
 	}
 
-	// ---------------------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------
 	// App Starting
 
 	log.Info(ctx, "starting service", "version", cfg.Build)
@@ -108,6 +135,30 @@ func run(ctx context.Context, log *logger.Logger) error {
 	}
 
 	defer db.Close()
+
+	// -------------------------------------------------------------------------
+	// Initialize authentication support
+
+	log.Info(ctx, "startup", "status", "initializing authentication support")
+
+	// Load the private keys files from disk. We can assume some system like
+	// Vault has created these files already. How that happens is not our
+	// concern.
+	ks := keystore.New()
+	if err := ks.LoadRSAKeys(os.DirFS(cfg.Auth.KeysFolder)); err != nil {
+		return fmt.Errorf("reading keys: %w", err)
+	}
+
+	authCfg := auth.Config{
+		Log:       log,
+		KeyLookup: ks,
+	}
+
+	ath, err := auth.New(authCfg)
+	if err != nil {
+		return fmt.Errorf("constructing auth: %w", err)
+	}
+
 	// -------------------------------------------------------------------------
 	// Start Debug Service
 
@@ -119,12 +170,19 @@ func run(ctx context.Context, log *logger.Logger) error {
 		}
 	}()
 
+	// -------------------------------------------------------------------------
+	// Start API Service
+
+	log.Info(ctx, "startup", "status", "initializing V1 API support")
+
 	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGINT)
+	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGTERM)
 
 	cfgMux := mux.Config{
 		Build: build,
 		Log:   log,
+		Auth:  ath,
+		DB:    db,
 	}
 
 	api := http.Server{

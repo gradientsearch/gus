@@ -6,14 +6,20 @@ import (
 	"context"
 
 	"github.com/gradientsearch/gus/api/http/api/mid"
+	"github.com/gradientsearch/gus/app/api/auth"
+	"github.com/gradientsearch/gus/app/api/authclient"
 	"github.com/gradientsearch/gus/foundation/logger"
 	"github.com/gradientsearch/gus/foundation/web"
+	"github.com/jmoiron/sqlx"
 )
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	Build string
-	Log   *logger.Logger
+	Build      string
+	Log        *logger.Logger
+	DB         *sqlx.DB
+	Auth       *auth.Auth
+	AuthClient *authclient.Client
 }
 
 // RouteAdder defines behavior that sets the routes to bind for an instance

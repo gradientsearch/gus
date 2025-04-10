@@ -1,11 +1,15 @@
 # Build the Go Binary.
-FROM golang:1.23 AS build_gus
+FROM golang:1.24 AS build_gus
 ENV CGO_ENABLED=0
 ARG BUILD_REF
 
 # Copy the source code into the container.
 COPY . /service
 
+
+# Build the admin binary.
+WORKDIR /service/api/cmd/tooling/admin
+RUN go build -ldflags "-X main.build=${BUILD_REF}"
 
 # Build the service binary.
 WORKDIR /service/api/cmd/services/gus
@@ -19,6 +23,7 @@ ARG BUILD_REF
 RUN addgroup -g 1000 -S gus && \
     adduser -u 1000 -h /service -G gus -S gus
 COPY --from=build_gus --chown=gus:gus /service/api/cmd/services/gus/gus /service/gus
+COPY --from=build_gus --chown=gus:gus /service/api/cmd/tooling/admin/admin /service/admin
 WORKDIR /service
 USER gus
 CMD ["./gus"]
