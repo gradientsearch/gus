@@ -31,3 +31,15 @@ spec:
           containerPort: 3000
         - name: gus-debug
           containerPort: 3010
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: gus-service
+  namespace: gus-system
+
+spec:
+  selector:
+    app: gus
