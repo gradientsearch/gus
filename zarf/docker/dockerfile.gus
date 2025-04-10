@@ -7,6 +7,10 @@ ARG BUILD_REF
 COPY . /service
 
 
+# Build the admin binary.
+WORKDIR /service/api/cmd/tooling/admin
+RUN go build -ldflags "-X main.build=${BUILD_REF}"
+
 # Build the service binary.
 WORKDIR /service/api/cmd/services/gus
 RUN go build -ldflags "-X main.build=${BUILD_REF}"
@@ -19,6 +23,7 @@ ARG BUILD_REF
 RUN addgroup -g 1000 -S gus && \
     adduser -u 1000 -h /service -G gus -S gus
 COPY --from=build_gus --chown=gus:gus /service/api/cmd/services/gus/gus /service/gus
+COPY --from=build_gus --chown=gus:gus /service/api/cmd/tooling/admin/admin /service/admin
 WORKDIR /service
 USER gus
 CMD ["./gus"]

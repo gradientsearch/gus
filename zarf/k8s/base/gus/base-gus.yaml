@@ -22,6 +22,12 @@ spec:
         app: gus
     spec:
 
+
+      initContainers:
+      - name: init-migrate-seed
+        image: gus-image
+        command: ['./admin']
+
       containers:
       - name: gus
         image: gus-image
