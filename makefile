@@ -3,14 +3,12 @@ KIND            := kindest/node:v1.29.2
 ALPINE          := alpine:3.19
 POSTGRES        := postgres:16.2
 
-
-
 KIND_CLUSTER    := guster
 NAMESPACE       := gus-system
-GUS_APP       := gus
+GUS_APP         := gus
 BASE_IMAGE_NAME := localhost/gradientsearch
-VERSION       := 0.0.1
-GUS_IMAGE     := $(BASE_IMAGE_NAME)/$(GUS_APP):$(VERSION)
+VERSION         := 0.0.1
+GUS_IMAGE       := $(BASE_IMAGE_NAME)/$(GUS_APP):$(VERSION)
 
 
 # ==================================================================================================
@@ -19,9 +17,14 @@ GUS_IMAGE     := $(BASE_IMAGE_NAME)/$(GUS_APP):$(VERSION)
 run:
 	go run api/cmd/services/gus/main.go |  go run api/cmd/tooling/logfmt/main.go
 	 
-
 drun:
 	  docker rm -f gus-test && docker run -p 3000:3000 --name gus-test $(GUS_IMAGE) |  go run api/cmd/tooling/logfmt/main.go 
+
+curl-live:
+	curl -il -X GET http://localhost:3000/liveness
+
+curl-ready:
+	curl -il -X GET http://localhost:3000/readiness
 
 
 # ==============================================================================
