@@ -37,7 +37,10 @@ token:
 	curl -il \
 	--user "admin@example.com:gophers" http://localhost:6000/auth/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
 
-
+convo:
+	curl -il \
+	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/conversation" -d  '{"conversationID": "31b2ecfc-170b-11f0-9d62-d73a185a35b3", "messages": [{"id": "31b2ecfc-170b-11f0-9d62-d73a185a35b3", "role": "user", "content": "Why is the sky blue?"}], "parentMessageID": "00000000-0000-0000-0000-000000000000"}'
+	
 # ==============================================================================
 # Building containers
 

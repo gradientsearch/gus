@@ -15,7 +15,7 @@ type Conversation struct {
 
 type Message struct {
 	ID      string `json:"id"`
-	Role    string `json:"author"`
+	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
@@ -36,11 +36,12 @@ func toAppConversation(bus chatbus.Conversation) (Conversation, error) {
 
 func toAppMessages(bus []chatbus.Message) ([]Message, error) {
 	app := make([]Message, len(bus))
-	for _, b := range bus {
+	for i, b := range bus {
 		var a Message
 		a.ID = b.ID.String()
 		a.Role = b.Role.Name()
 		a.Content = b.Content
+		app[i] = a
 	}
 
 	return app, nil
@@ -50,13 +51,13 @@ func toBusConversation(con Conversation) (chatbus.Conversation, error) {
 	var bus chatbus.Conversation
 
 	if id, err := uuid.Parse(con.ID); err != nil {
-		return chatbus.Conversation{}, fmt.Errorf("parse: %w", err)
+		return chatbus.Conversation{}, fmt.Errorf("bus ID parse: %w", err)
 	} else {
 		bus.ID = id
 	}
 
 	if id, err := uuid.Parse(con.ParentMessageID); err != nil {
-		return chatbus.Conversation{}, fmt.Errorf("parse: %w", err)
+		return chatbus.Conversation{}, fmt.Errorf("bus ParentMessageID parse: %w", err)
 	} else {
 		bus.ID = id
 	}
@@ -77,13 +78,13 @@ func toBusMessages(app []Message) ([]chatbus.Message, error) {
 		var b chatbus.Message
 
 		if id, err := uuid.Parse(m.ID); err != nil {
-			return nil, fmt.Errorf("parse: %w", err)
+			return nil, fmt.Errorf("bus message ID parse: %w", err)
 		} else {
 			b.ID = id
 		}
 
 		if role, err := chatbus.ParseRole(m.Role); err != nil {
-			return nil, fmt.Errorf("parse: %w", err)
+			return nil, fmt.Errorf("bus message Role parse: %w", err)
 		} else {
 			b.Role = role
 		}

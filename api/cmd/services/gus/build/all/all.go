@@ -3,7 +3,9 @@ package all
 
 import (
 	"github.com/gradientsearch/gus/api/http/api/mux"
+	"github.com/gradientsearch/gus/api/http/domain/chatapi"
 	"github.com/gradientsearch/gus/api/http/domain/checkapi"
+	"github.com/gradientsearch/gus/app/domain/chatapp"
 
 	"github.com/gradientsearch/gus/foundation/web"
 )
@@ -23,4 +25,6 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		Build: cfg.Build,
 		Log:   cfg.Log,
 	})
+
+	chatapi.Routes(app, &chatapp.App{})
 }

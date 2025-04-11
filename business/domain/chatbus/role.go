@@ -10,6 +10,8 @@ var (
 	RoleUser = newRole("user")
 )
 
+var RoleAssistant = Role{"assistant"}
+
 // Role represents a role in the system.
 type Role struct {
 	name string

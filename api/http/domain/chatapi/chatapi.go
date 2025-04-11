@@ -30,16 +30,12 @@ func (api *api) conversation(ctx context.Context, w http.ResponseWriter, r *http
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	api.chatApp.Conversation(ctx, c)
+	cr, err := api.chatApp.Conversation(ctx, c)
 
-	status := "ok"
-	statusCode := http.StatusOK
-
-	data := struct {
-		Status string `json:"status"`
-	}{
-		Status: status,
+	if err != nil {
+		return errs.New(errs.Internal, err)
 	}
 
-	return web.Respond(ctx, w, data, statusCode)
+	statusCode := http.StatusOK
+	return web.Respond(ctx, w, cr, statusCode)
 }
