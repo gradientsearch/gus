@@ -91,7 +91,7 @@ func toBusMessages(app []Message) ([]chatbus.Message, error) {
 			b.ID = id
 		}
 
-		if role, err := chatbus.ParseRole(m.Role); err != nil {
+		if role, err := chatbus.ParseUserRoles(m.Role); err != nil {
 			return nil, fmt.Errorf("bus message Role parse: %w", err)
 		} else {
 			b.Role = role
@@ -99,6 +99,8 @@ func toBusMessages(app []Message) ([]chatbus.Message, error) {
 
 		// TODO sanitize content
 		b.Content = m.Content
+
+		bus = append(bus, b)
 	}
 
 	return bus, nil

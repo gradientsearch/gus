@@ -8,16 +8,19 @@ import (
 
 	"github.com/gradientsearch/gus/app/api/errs"
 	"github.com/gradientsearch/gus/app/domain/chatapp"
+	"github.com/gradientsearch/gus/foundation/logger"
 	"github.com/gradientsearch/gus/foundation/web"
 )
 
 type api struct {
 	chatApp *chatapp.App
+	log     *logger.Logger
 }
 
-func newAPI(chat *chatapp.App) *api {
+func newAPI(chat *chatapp.App, log *logger.Logger) *api {
 	return &api{
 		chatApp: chat,
+		log:     log,
 	}
 }
 

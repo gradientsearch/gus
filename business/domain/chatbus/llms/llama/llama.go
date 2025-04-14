@@ -44,9 +44,13 @@ func (l *Llama) Chat(messages []chatbus.Message) (chatbus.Message, error) {
 	}
 	defer resp.Body.Close()
 
-	var m chatbus.Message
-	if err := json.NewDecoder(resp.Body).Decode(&m); err != nil {
+	var cresp ChatResponse
+	if err := json.NewDecoder(resp.Body).Decode(&cresp); err != nil {
 		return chatbus.Message{}, fmt.Errorf("error decoding body: %w", err)
+	}
+	m, err := llmToBusMessages(cresp.Message)
+	if err != nil {
+		return chatbus.Message{}, fmt.Errorf("error converting llm message to bus message: %w", err)
 	}
 
 	return m, nil

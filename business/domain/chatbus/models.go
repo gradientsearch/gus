@@ -11,6 +11,6 @@ type Conversation struct {
 
 type Message struct {
 	ID      uuid.UUID `json:"id"`
-	Role    Role      `json:"author"`
+	Role    Role      `json:"role"`
 	Content string    `json:"content"`
 }

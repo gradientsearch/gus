@@ -21,9 +21,9 @@ type ChatRequest struct {
 
 // ChatRequest is the full request payload.
 type ChatResponse struct {
-	Model    string  `json:"model"`
-	Messages Message `json:"message"`
-	Stream   bool    `json:"stream"`
+	Model   string  `json:"model"`
+	Message Message `json:"message"`
+	Stream  bool    `json:"stream"`
 }
 
 func busToLlmMessages(messages []chatbus.Message) []Message {
@@ -32,6 +32,7 @@ func busToLlmMessages(messages []chatbus.Message) []Message {
 		var m Message
 		m.Content = messages[i].Content
 		m.Role = messages[i].Role.Name()
+		cm[i] = m
 	}
 	return cm
 }
@@ -39,7 +40,7 @@ func busToLlmMessages(messages []chatbus.Message) []Message {
 func llmToBusMessages(msg Message) (chatbus.Message, error) {
 	var m chatbus.Message
 	m.Content = msg.Content
-	r, err := chatbus.ParseRole(msg.Role)
+	r, err := chatbus.ParseLlmRoles(msg.Role)
 	if err != nil {
 		return chatbus.Message{}, fmt.Errorf("unexpected role: %s", msg.Role)
 	}
