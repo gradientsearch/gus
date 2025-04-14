@@ -1,9 +1,11 @@
 package chatapp
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/gradientsearch/gus/app/api/mid"
 	"github.com/gradientsearch/gus/business/domain/chatbus"
 )
 
@@ -47,7 +49,7 @@ func toAppMessages(bus []chatbus.Message) ([]Message, error) {
 	return app, nil
 }
 
-func toBusConversation(con Conversation) (chatbus.Conversation, error) {
+func toBusConversation(ctx context.Context, con Conversation) (chatbus.Conversation, error) {
 	var bus chatbus.Conversation
 
 	if id, err := uuid.Parse(con.ID); err != nil {
@@ -66,6 +68,12 @@ func toBusConversation(con Conversation) (chatbus.Conversation, error) {
 		return chatbus.Conversation{}, err
 	} else {
 		bus.Messages = mes
+	}
+
+	if userID, err := mid.GetUserID(ctx); err != nil {
+		return chatbus.Conversation{}, fmt.Errorf("bus userID parse: %w", err)
+	} else {
+		bus.UserID = userID
 	}
 
 	return bus, nil

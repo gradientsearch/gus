@@ -12,7 +12,7 @@ type App struct {
 }
 
 func (a *App) Conversation(ctx context.Context, con Conversation) (Conversation, error) {
-	bc, err := toBusConversation(con)
+	bc, err := toBusConversation(ctx, con)
 	if err != nil {
 		return Conversation{}, errs.New(errs.FailedPrecondition, err)
 	}
