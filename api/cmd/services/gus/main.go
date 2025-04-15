@@ -19,6 +19,7 @@ import (
 	"github.com/gradientsearch/gus/app/api/authclient"
 	"github.com/gradientsearch/gus/business/api/sqldb"
 	"github.com/gradientsearch/gus/business/domain/chatbus"
+	"github.com/gradientsearch/gus/business/domain/chatbus/llms"
 	"github.com/gradientsearch/gus/business/domain/chatbus/llms/llama"
 	"github.com/gradientsearch/gus/business/domain/chatbus/stores/chatdb"
 	"github.com/gradientsearch/gus/business/domain/userbus"
@@ -128,17 +129,19 @@ func run(ctx context.Context, log *logger.Logger) error {
 	// -------------------------------------------------------------------------
 	// Create LLM
 
-	llama := &llama.Llama{
+	_ = &llama.Llama{
 		BaseURL: "http://localllm.dev:11434",
 		Client:  &http.Client{},
 		Model:   "llama3.2",
 		Stream:  false,
 	}
+
+	mockLlm := &llms.Mock{}
 	// -------------------------------------------------------------------------
 	// Create Business Packages
 
 	userBus := userbus.NewBusiness(log, userdb.NewStore(log, db))
-	chatBus := chatbus.NewBusiness(log, chatdb.NewStore(log, db), llama)
+	chatBus := chatbus.NewBusiness(log, chatdb.NewStore(log, db), mockLlm)
 
 	defer db.Close()
 	// -------------------------------------------------------------------------
