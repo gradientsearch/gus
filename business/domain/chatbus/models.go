@@ -13,4 +13,5 @@ type Message struct {
 	ID      uuid.UUID `json:"id"`
 	Role    Role      `json:"role"`
 	Content string    `json:"content"`
+	Order   int       `json:"order"`
 }
