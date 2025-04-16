@@ -20,9 +20,10 @@ CREATE TABLE conversations (
 );
 
 CREATE TABLE messages (
-    message_id UUID PRIMARY KEY,
-    conversation_id UUID REFERENCES conversations(conversation_id),
-    role TEXT,
+    message_id UUID NOT NULL,
+    conversation_id UUID NOT NULL REFERENCES conversations(conversation_id),
+    "role" TEXT,
     content TEXT,
-    "order" INT
+    "order" INT,
+    PRIMARY KEY (message_id, conversation_id)
 );

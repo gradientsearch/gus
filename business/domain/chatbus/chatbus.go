@@ -56,7 +56,9 @@ func (b *Business) Conversation(ctx context.Context, con Conversation) (Conversa
 	if con.ID.String() == ROOT_CONVERSATION_ID {
 		c = Conversation{}
 		c.ID = uuid.New()
+		c.UserID = con.UserID
 		c.Messages = []Message{SYSTEM_PROMPT}
+		b.log.Info(ctx, "creating conversation", "conversation", fmt.Sprintf("%+v", c))
 		if err := b.storer.Create(ctx, c); err != nil {
 			return Conversation{}, fmt.Errorf("error creating conversation: %w", err)
 		}

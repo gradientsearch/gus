@@ -26,6 +26,7 @@ func (a *App) Conversation(ctx context.Context, con Conversation) (Conversation,
 		return Conversation{}, errs.New(errs.FailedPrecondition, err)
 	}
 
+	a.log.Info(ctx, "bus convo", "userid", bc.UserID.String())
 	c, err := a.chatBus.Conversation(ctx, bc)
 	if err != nil {
 		return Conversation{}, errs.New(errs.Internal, err)

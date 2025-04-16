@@ -54,7 +54,7 @@ func Bearer(ctx context.Context, ath *auth.Auth, authorization string, handler H
 func Basic(ctx context.Context, handler Handler) error {
 	claims := auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   "38dc9d84-018b-4a15-b958-0b78af11c301",
+			Subject:   "5cf37266-3473-4006-984f-9325122678b7",
 			Issuer:    "service project",
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(8760 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),

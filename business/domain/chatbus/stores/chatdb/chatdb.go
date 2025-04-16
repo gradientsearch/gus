@@ -66,6 +66,8 @@ WHERE
 }
 
 func (s *Store) Create(ctx context.Context, c chatbus.Conversation) error {
+
+	dbCon := toDbConversation(c)
 	tx, err := s.tx.DB.Begin()
 	if err != nil {
 		return fmt.Errorf("db: %w", err)
@@ -76,18 +78,19 @@ func (s *Store) Create(ctx context.Context, c chatbus.Conversation) error {
 	VALUES
 		($1, $2, $3)`
 
-	if _, err = tx.ExecContext(ctx, q1, c.ID, c.ParentMessageID, c.UserID); err != nil {
+	if _, err = tx.ExecContext(ctx, q1, dbCon.ID, dbCon.ParentMessageID, dbCon.UserID); err != nil {
 		return fmt.Errorf("db: %w", err)
 	}
 
 	const q2 = `
 	INSERT INTO messages
-		(message_id, conversation_id, user_id, role, content, order)
+		(message_id, conversation_id, role, content, "order")
 	VALUES
-		($1, $2, $3, $4, $5, $6)`
+		($1, $2, $3, $4, $5)`
 
 	for _, m := range toDbMessages(c.Messages) {
-		if _, err = tx.ExecContext(ctx, q2, m.ID, c.ID, c.UserID, m.Role, m.Content, m.Order); err != nil {
+		s.log.Info(ctx, "dbmessage", "message", fmt.Sprintf("%+v, conID %s", m, dbCon.ID))
+		if _, err = tx.ExecContext(ctx, q2, m.ID, dbCon.ID, m.Role, m.Content, m.Order); err != nil {
 			return fmt.Errorf("db: %w", err)
 		}
 	}

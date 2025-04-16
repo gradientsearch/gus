@@ -33,13 +33,13 @@ func toDbConversation(busCon chatbus.Conversation) conversation {
 
 func toDbMessages(busMsgs []chatbus.Message) []message {
 	dbMsgs := make([]message, len(busMsgs))
-	for _, bm := range busMsgs {
+	for i, bm := range busMsgs {
 		dm := message{}
-		dm.Content = bm.Content
 		dm.ID = bm.ID
+		dm.Content = bm.Content
 		dm.Role = bm.Role.Name()
 		dm.Order = bm.Order
-		dbMsgs = append(dbMsgs, dm)
+		dbMsgs[i] = dm
 	}
 
 	return dbMsgs
