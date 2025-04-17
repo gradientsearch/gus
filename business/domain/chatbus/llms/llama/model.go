@@ -3,6 +3,7 @@ package llama
 import (
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/gradientsearch/gus/business/domain/chatbus"
 )
 
@@ -39,11 +40,14 @@ func busToLlmMessages(messages []chatbus.Message) []Message {
 
 func llmToBusMessages(msg Message) (chatbus.Message, error) {
 	var m chatbus.Message
+	m.ID = uuid.New()
 	m.Content = msg.Content
 	r, err := chatbus.ParseLlmRoles(msg.Role)
 	if err != nil {
 		return chatbus.Message{}, fmt.Errorf("unexpected role: %s", msg.Role)
 	}
 	m.Role = r
+	// Will be reordered later. Stub value greater than 0; system prompt uses 0.
+	m.Order = 1e5
 	return m, nil
 }

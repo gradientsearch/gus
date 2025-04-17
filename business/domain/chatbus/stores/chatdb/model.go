@@ -11,6 +11,11 @@ type conversation struct {
 	UserID          uuid.UUID `db:"user_id"`
 }
 
+type conversationMessage struct {
+	conversation
+	message
+}
+
 type message struct {
 	ID      uuid.UUID `db:"message_id"`
 	Role    string    `db:"role"`
@@ -18,7 +23,7 @@ type message struct {
 	Order   int       `db:"order"`
 }
 
-func toBusConversation(dbCon conversation) (chatbus.Conversation, error) {
+func toBusConversation(dbCon []conversationMessage) (chatbus.Conversation, error) {
 
 	return chatbus.Conversation{}, nil
 }

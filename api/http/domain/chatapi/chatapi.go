@@ -3,6 +3,7 @@ package chatapi
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -32,6 +33,8 @@ func (api *api) conversation(ctx context.Context, w http.ResponseWriter, r *http
 	if err := web.Decode(r, &c); err != nil {
 		return errs.New(errs.FailedPrecondition, err)
 	}
+
+	api.log.Info(ctx, "api decode", "convo", fmt.Sprintf("%+v", c))
 
 	cr, err := api.chatApp.Conversation(ctx, c)
 

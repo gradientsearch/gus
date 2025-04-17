@@ -61,7 +61,7 @@ func toBusConversation(ctx context.Context, con Conversation) (chatbus.Conversat
 	if id, err := uuid.Parse(con.ParentMessageID); err != nil {
 		return chatbus.Conversation{}, fmt.Errorf("bus ParentMessageID parse: %w", err)
 	} else {
-		bus.ID = id
+		bus.ParentMessageID = id
 	}
 
 	if mes, err := toBusMessages(con.Messages); err != nil {
@@ -82,7 +82,7 @@ func toBusConversation(ctx context.Context, con Conversation) (chatbus.Conversat
 func toBusMessages(app []Message) ([]chatbus.Message, error) {
 	bus := make([]chatbus.Message, len(app))
 
-	for _, m := range app {
+	for i, m := range app {
 		var b chatbus.Message
 
 		if id, err := uuid.Parse(m.ID); err != nil {
@@ -100,7 +100,7 @@ func toBusMessages(app []Message) ([]chatbus.Message, error) {
 		// TODO sanitize content
 		b.Content = m.Content
 
-		bus = append(bus, b)
+		bus[i] = b
 	}
 
 	return bus, nil

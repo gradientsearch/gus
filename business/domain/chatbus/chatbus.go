@@ -51,58 +51,75 @@ func NewBusiness(log *logger.Logger, storer Storer, llm LLM) *Business {
 
 // Conversation hydrates the conversation with existing messages and updates it with
 // new user messages and the LLM response.
-func (b *Business) Conversation(ctx context.Context, con Conversation) (Conversation, error) {
-	c, err := b.hydrate(ctx, con)
+func (b *Business) Conversation(ctx context.Context, usrConvo Conversation) (Conversation, error) {
+	b.log.Info(ctx, "messages to update", "user messages", fmt.Sprintf("%+v", usrConvo))
+	hydrateConvo, err := b.hydrate(ctx, usrConvo)
 	if err != nil {
 		return Conversation{}, err
 	}
 
-	llmMessage, err := b.llm.Chat(c.Messages)
+	b.log.Info(ctx, "messages to update", "hydrate messages", fmt.Sprintf("%+v", hydrateConvo.Messages))
+
+	llmMessage, err := b.llm.Chat(hydrateConvo.Messages)
 
 	if err != nil {
 		return Conversation{}, fmt.Errorf("error querying llm: %w", err)
 	}
 
-	err = b.update(ctx, con, llmMessage)
+	err = b.update(ctx, hydrateConvo, usrConvo, llmMessage)
 	if err != nil {
 		return Conversation{}, fmt.Errorf("error updating conversation: %w", err)
 	}
 
-	c.Messages = []Message{llmMessage}
-	return c, nil
+	hydrateConvo.Messages = []Message{llmMessage}
+	return hydrateConvo, nil
 }
 
 // hydrate creates a new conversation with a system prompt if it's the start of a conversation,
 // or returns the existing conversation with the new messages appended.
-func (b *Business) hydrate(ctx context.Context, con Conversation) (Conversation, error) {
+func (b *Business) hydrate(ctx context.Context, userConvo Conversation) (Conversation, error) {
 	var (
 		c   Conversation
 		err error
 	)
 
-	if con.ID.String() == ROOT_CONVERSATION_ID {
+	if userConvo.ID.String() == ROOT_CONVERSATION_ID {
 		c.ID = uuid.New()
-		c.UserID = con.UserID
+		c.UserID = userConvo.UserID
 		c.Messages = []Message{SYSTEM_PROMPT}
 		if err := b.storer.Create(ctx, c); err != nil {
 			return Conversation{}, fmt.Errorf("error creating conversation: %w", err)
 		}
 	} else {
-		c, err = b.storer.QueryById(ctx, con.UserID, con.ID)
+		c, err = b.storer.QueryById(ctx, userConvo.UserID, userConvo.ID)
 		if err != nil {
 			return Conversation{}, fmt.Errorf("error querying conversation: %w", err)
 		}
 	}
 
-	c.Messages = append(c.Messages, con.Messages...)
+	c.Messages = append(c.Messages, userConvo.Messages...)
 
 	return c, err
 }
 
-func (b *Business) update(ctx context.Context, con Conversation, llmMessage Message) error {
-	con.Messages = append(con.Messages, llmMessage)
+// Update writes only the new messages to the database and adds the order to the new messages
+func (b *Business) update(ctx context.Context, hydratedConvo Conversation, usrConvo Conversation, llmMessage Message) error {
+	nextOrder := len(hydratedConvo.Messages) - len(usrConvo.Messages)
 
-	if err := b.storer.Update(ctx, con); err != nil {
+	updateConvo := Conversation{}
+	updateConvo.ID = hydratedConvo.ID
+	updateConvo.ParentMessageID = hydratedConvo.ParentMessageID
+	updateConvo.UserID = hydratedConvo.UserID
+	updateConvo.Messages = []Message{}
+	updateConvo.Messages = append(updateConvo.Messages, usrConvo.Messages...)
+	updateConvo.Messages = append(updateConvo.Messages, llmMessage)
+
+	for i := range updateConvo.Messages {
+		updateConvo.Messages[i].Order = nextOrder + i
+	}
+
+	b.log.Info(ctx, "messages to update", "messages", fmt.Sprintf("%+v", updateConvo.Messages))
+	if err := b.storer.Update(ctx, updateConvo); err != nil {
 		return fmt.Errorf("error updating conversation: %w", err)
 	}
 

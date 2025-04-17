@@ -39,30 +39,34 @@ func (s *Store) QueryById(ctx context.Context, userID uuid.UUID, conID uuid.UUID
 		ConversationID: conID.String(),
 	}
 
-	const q = `	
-SELECT
-	c.id AS conversation_id,
-	c.parent_message_id,
-	m.id AS message_id,
-	m.role,
-	m.content
+	const q = `SELECT
+    c.conversation_id,
+    c.parent_message_id,
+    c.user_id,
+    m.message_id,
+    m.role,
+    m.content,
+    m.order
 FROM
-	conversations c
-	JOIN messages m ON m.conversation_id = c.id;
-
+    conversations c
+JOIN
+    messages m ON m.conversation_id = c.conversation_id
 WHERE
-	c.user_id = :user_id
-	AND c.id = :conversation_id;`
+    c.user_id = :user_id
+    AND c.conversation_id = :conversation_id
+ORDER BY
+    m.order ASC;
+`
 
-	var dbCon conversation
-	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbCon); err != nil {
+	var dbCons []conversationMessage
+	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbCons); err != nil {
 		if errors.Is(err, sqldb.ErrDBNotFound) {
 			return chatbus.Conversation{}, fmt.Errorf("db: %w", chatbus.ErrNotFound)
 		}
 		return chatbus.Conversation{}, fmt.Errorf("db: %w", err)
 	}
 
-	return toBusConversation(dbCon)
+	return toBusConversation(dbCons)
 }
 
 func (s *Store) Create(ctx context.Context, c chatbus.Conversation) error {

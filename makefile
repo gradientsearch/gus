@@ -39,7 +39,12 @@ token:
 
 convo:
 	curl -il \
-	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/conversation" -d  '{"conversationID": "31b2ecfc-170b-11f0-9d62-d73a185a35b3", "messages": [{"id": "31b2ecfc-170b-11f0-9d62-d73a185a35b3", "role": "user", "content": "Why is the sky blue?"}], "parentMessageID": "00000000-0000-0000-0000-000000000000"}'
+	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/conversation" -d  '{"conversationID": "00000000-0000-0000-0000-000000000000", "messages": [{"id": "31b2ecfc-170b-11f0-9d62-d73a185a35b3", "role": "user", "content": "Why is the sky blue?"}], "parentMessageID": "00000000-0000-0000-0000-000000000000"}'
+
+
+next:
+	curl -il \
+	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/conversation" -d  '{"conversationID": "c270b57e-6322-4006-82a3-b5daed17a0cf", "messages": [{"id": "31b2ecfc-170b-11f0-9d62-d73a185a35b2", "role": "user", "content": "Why is the sky blue?"}], "parentMessageID": "00000000-0000-0000-0000-000000000000"}'
 
 load:
 	hey -n 10000 -c 100 http://localhost:3000/liveness
