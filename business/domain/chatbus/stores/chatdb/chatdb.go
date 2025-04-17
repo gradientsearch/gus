@@ -66,23 +66,24 @@ WHERE
 }
 
 func (s *Store) Create(ctx context.Context, c chatbus.Conversation) error {
-
 	dbCon := toDbConversation(c)
+
 	tx, err := s.tx.DB.Begin()
 	if err != nil {
 		return fmt.Errorf("db: %w", err)
 	}
-	const q1 = `
+
+	const convoQuery = `
 	INSERT INTO conversations
 		(conversation_id, parent_message_id, user_id)
 	VALUES
 		($1, $2, $3)`
 
-	if _, err = tx.ExecContext(ctx, q1, dbCon.ID, dbCon.ParentMessageID, dbCon.UserID); err != nil {
+	if _, err = tx.ExecContext(ctx, convoQuery, dbCon.ID, dbCon.ParentMessageID, dbCon.UserID); err != nil {
 		return fmt.Errorf("db: %w", err)
 	}
 
-	const q2 = `
+	const msgQuery = `
 	INSERT INTO messages
 		(message_id, conversation_id, role, content, "order")
 	VALUES
@@ -90,7 +91,7 @@ func (s *Store) Create(ctx context.Context, c chatbus.Conversation) error {
 
 	for _, m := range toDbMessages(c.Messages) {
 		s.log.Info(ctx, "dbmessage", "message", fmt.Sprintf("%+v, conID %s", m, dbCon.ID))
-		if _, err = tx.ExecContext(ctx, q2, m.ID, dbCon.ID, m.Role, m.Content, m.Order); err != nil {
+		if _, err = tx.ExecContext(ctx, msgQuery, m.ID, dbCon.ID, m.Role, m.Content, m.Order); err != nil {
 			return fmt.Errorf("db: %w", err)
 		}
 	}
@@ -101,6 +102,31 @@ func (s *Store) Create(ctx context.Context, c chatbus.Conversation) error {
 
 	return nil
 }
+
 func (s *Store) Update(ctx context.Context, c chatbus.Conversation) error {
+	dbCon := toDbConversation(c)
+	tx, err := s.tx.DB.Begin()
+
+	if err != nil {
+		return fmt.Errorf("db: %w", err)
+	}
+	const msgQuery = `
+	INSERT INTO messages
+		(message_id, conversation_id, role, content, "order")
+	VALUES
+		($1, $2, $3, $4, $5)`
+
+	for _, m := range toDbMessages(c.Messages) {
+		s.log.Info(ctx, "dbmessage", "message", fmt.Sprintf("%+v, conID %s", m, dbCon.ID))
+		if _, err = tx.ExecContext(ctx, msgQuery, m.ID, dbCon.ID, m.Role, m.Content, m.Order); err != nil {
+			return fmt.Errorf("db: %w", err)
+		}
+	}
+
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("db: %w", err)
+	}
+
 	return nil
+
 }

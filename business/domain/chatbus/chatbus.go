@@ -49,16 +49,41 @@ func NewBusiness(log *logger.Logger, storer Storer, llm LLM) *Business {
 	}
 }
 
+// Conversation hydrates the conversation with existing messages and updates it with
+// new user messages and the LLM response.
 func (b *Business) Conversation(ctx context.Context, con Conversation) (Conversation, error) {
-	var c Conversation
-	var err error
+	c, err := b.hydrate(ctx, con)
+	if err != nil {
+		return Conversation{}, err
+	}
+
+	llmMessage, err := b.llm.Chat(c.Messages)
+
+	if err != nil {
+		return Conversation{}, fmt.Errorf("error querying llm: %w", err)
+	}
+
+	err = b.update(ctx, con, llmMessage)
+	if err != nil {
+		return Conversation{}, fmt.Errorf("error updating conversation: %w", err)
+	}
+
+	c.Messages = []Message{llmMessage}
+	return c, nil
+}
+
+// hydrate creates a new conversation with a system prompt if it's the start of a conversation,
+// or returns the existing conversation with the new messages appended.
+func (b *Business) hydrate(ctx context.Context, con Conversation) (Conversation, error) {
+	var (
+		c   Conversation
+		err error
+	)
 
 	if con.ID.String() == ROOT_CONVERSATION_ID {
-		c = Conversation{}
 		c.ID = uuid.New()
 		c.UserID = con.UserID
 		c.Messages = []Message{SYSTEM_PROMPT}
-		b.log.Info(ctx, "creating conversation", "conversation", fmt.Sprintf("%+v", c))
 		if err := b.storer.Create(ctx, c); err != nil {
 			return Conversation{}, fmt.Errorf("error creating conversation: %w", err)
 		}
@@ -69,24 +94,17 @@ func (b *Business) Conversation(ctx context.Context, con Conversation) (Conversa
 		}
 	}
 
-	// Append new message[s] to existing conversation
 	c.Messages = append(c.Messages, con.Messages...)
 
-	llmMessage, err := b.llm.Chat(c.Messages)
+	return c, err
+}
 
-	if err != nil {
-		return Conversation{}, fmt.Errorf("error querying llm: %w", err)
+func (b *Business) update(ctx context.Context, con Conversation, llmMessage Message) error {
+	con.Messages = append(con.Messages, llmMessage)
+
+	if err := b.storer.Update(ctx, con); err != nil {
+		return fmt.Errorf("error updating conversation: %w", err)
 	}
 
-	c.Messages = append(c.Messages, llmMessage)
-	c.Messages = []Message{}
-	c.Messages = append(c.Messages, con.Messages...)
-	c.Messages = append(c.Messages, llmMessage)
-
-	if err := b.storer.Update(ctx, c); err != nil {
-		return Conversation{}, fmt.Errorf("error updating conversation: %w", err)
-	}
-
-	c.Messages = []Message{llmMessage}
-	return c, nil
+	return nil
 }
