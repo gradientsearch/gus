@@ -53,9 +53,8 @@ func Basic(ath *auth.Auth) web.MidHandler {
 				return handler(ctx, w, r)
 			}
 
-			return mid.Basic(ctx, hdl)
+			return mid.Basic(ctx, r, *ath.UserBus, hdl)
 		}
-
 		return h
 	}
 

@@ -33,6 +33,11 @@ curl-live:
 curl-ready:
 	curl -il -X GET http://localhost:3000/readiness
 
+
+utoken:
+	curl -il \
+	--user "user@example.com:gophers" http://localhost:6000/auth/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1
+
 token:
 	curl -il \
 	--user "admin@example.com:gophers" http://localhost:6000/auth/token/54bb2165-71e1-41a6-af3e-7da4a0e1e2c1

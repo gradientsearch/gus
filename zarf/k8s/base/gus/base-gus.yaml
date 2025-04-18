@@ -23,10 +23,10 @@ spec:
     spec:
 
 
-      # initContainers:
-      # - name: init-migrate-seed
-      #   image: gus-image
-      #   command: ['./admin']
+      initContainers:
+      - name: init-migrate-seed
+        image: gus-image
+        command: ['./admin']
 
       containers:
       - name: gus

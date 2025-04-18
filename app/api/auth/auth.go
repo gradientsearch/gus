@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/gradientsearch/gus/business/domain/userbus"
 	"github.com/gradientsearch/gus/foundation/logger"
 	"github.com/open-policy-agent/opa/rego"
 )
@@ -47,6 +48,7 @@ type Config struct {
 	Log       *logger.Logger
 	KeyLookup KeyLookup
 	Issuer    string
+	UserBus   *userbus.Business
 }
 
 // Auth is used to authenticate clients. It can generate a token for a
@@ -56,6 +58,7 @@ type Auth struct {
 	method    jwt.SigningMethod
 	parser    *jwt.Parser
 	issuer    string
+	UserBus   *userbus.Business
 }
 
 // New creates an Auth to support authentication/authorization.
@@ -65,6 +68,7 @@ func New(cfg Config) (*Auth, error) {
 		method:    jwt.GetSigningMethod(jwt.SigningMethodRS256.Name),
 		parser:    jwt.NewParser(jwt.WithValidMethods([]string{jwt.SigningMethodRS256.Name})),
 		issuer:    cfg.Issuer,
+		UserBus:   cfg.UserBus,
 	}
 
 	return &a, nil
@@ -137,10 +141,9 @@ func (a *Auth) Authenticate(ctx context.Context, bearerToken string) (Claims, er
 	}
 
 	// Check the database for this user to verify they are still enabled.
-
-	// if err := a.isUserEnabled(ctx, claims); err != nil {
-	// 	return Claims{}, fmt.Errorf("user not enabled : %w", err)
-	// }
+	if err := a.isUserEnabled(ctx, claims); err != nil {
+		return Claims{}, fmt.Errorf("user not enabled : %w", err)
+	}
 
 	return claims, nil
 }
@@ -194,24 +197,24 @@ func (a *Auth) opaPolicyEvaluation(ctx context.Context, regoScript string, rule 
 
 // isUserEnabled hits the database and checks the user is not disabled. If the
 // no database connection was provided, this check is skipped.
-// func (a *Auth) isUserEnabled(ctx context.Context, claims Claims) error {
-// 	if a.userBus == nil {
-// 		return nil
-// 	}
+func (a *Auth) isUserEnabled(ctx context.Context, claims Claims) error {
+	if a.UserBus == nil {
+		return nil
+	}
 
-// 	userID, err := uuid.Parse(claims.Subject)
-// 	if err != nil {
-// 		return fmt.Errorf("parse user: %w", err)
-// 	}
+	userID, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		return fmt.Errorf("parse user: %w", err)
+	}
 
-// 	usr, err := a.userBus.QueryByID(ctx, userID)
-// 	if err != nil {
-// 		return fmt.Errorf("query user: %w", err)
-// 	}
+	usr, err := a.UserBus.QueryByID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("query user: %w", err)
+	}
 
-// 	if !usr.Enabled {
-// 		return fmt.Errorf("user disabled")
-// 	}
+	if !usr.Enabled {
+		return fmt.Errorf("user disabled")
+	}
 
-// 	return nil
-// }
+	return nil
+}

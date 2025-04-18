@@ -32,6 +32,17 @@ func ParseRole(value string) (Role, error) {
 	return role, nil
 }
 
+// ParseToString takes a collection of user roles and converts them to
+// a slice of string.
+func ParseToString(usrRoles []Role) []string {
+	roles := make([]string, len(usrRoles))
+	for i, role := range usrRoles {
+		roles[i] = role.name
+	}
+
+	return roles
+}
+
 // MustParseRole parses the string value and returns a role if one exists. If
 // an error occurs the function panics.
 func MustParseRole(value string) Role {
