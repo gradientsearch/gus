@@ -18,6 +18,8 @@ import (
 	"github.com/gradientsearch/gus/api/http/api/mux"
 	"github.com/gradientsearch/gus/app/api/auth"
 	"github.com/gradientsearch/gus/business/api/sqldb"
+	"github.com/gradientsearch/gus/business/domain/userbus"
+	"github.com/gradientsearch/gus/business/domain/userbus/stores/userdb"
 	"github.com/gradientsearch/gus/foundation/keystore"
 	"github.com/gradientsearch/gus/foundation/logger"
 	"github.com/gradientsearch/gus/foundation/web"
@@ -149,9 +151,12 @@ func run(ctx context.Context, log *logger.Logger) error {
 		return fmt.Errorf("reading keys: %w", err)
 	}
 
+	userBus := userbus.NewBusiness(log, userdb.NewStore(log, db))
+
 	authCfg := auth.Config{
 		Log:       log,
 		KeyLookup: ks,
+		UserBus:   userBus,
 	}
 
 	ath, err := auth.New(authCfg)

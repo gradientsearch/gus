@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"net/http"
+	"net/mail"
 	"strings"
 	"time"
 
@@ -12,6 +14,8 @@ import (
 	"github.com/gradientsearch/gus/app/api/auth"
 	"github.com/gradientsearch/gus/app/api/authclient"
 	"github.com/gradientsearch/gus/app/api/errs"
+	"github.com/gradientsearch/gus/business/domain/userbus"
+
 	"github.com/gradientsearch/gus/foundation/logger"
 )
 
@@ -51,15 +55,30 @@ func Bearer(ctx context.Context, ath *auth.Auth, authorization string, handler H
 }
 
 // Basic processes basic authentication logic.
-func Basic(ctx context.Context, handler Handler) error {
+func Basic(ctx context.Context, r *http.Request, userBus userbus.Business, handler Handler) error {
+	email, pass, ok := parseBasicAuth(r.Header.Get("authorization"))
+	if !ok {
+		return errs.Newf(errs.Unauthenticated, "invalid Basic auth")
+	}
+
+	addr, err := mail.ParseAddress(email)
+	if err != nil {
+		return errs.New(errs.Unauthenticated, err)
+	}
+
+	usr, err := userBus.Authenticate(ctx, *addr, pass)
+	if err != nil {
+		return errs.New(errs.Unauthenticated, err)
+	}
+
 	claims := auth.Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   "5cf37266-3473-4006-984f-9325122678b7",
-			Issuer:    "service project",
+			Subject:   usr.ID.String(),
+			Issuer:    "gus-system",
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(8760 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
 		},
-		Roles: []string{"ADMIN"},
+		Roles: userbus.ParseToString(usr.Roles),
 	}
 
 	subjectID, err := uuid.Parse(claims.Subject)
