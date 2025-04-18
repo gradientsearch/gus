@@ -83,7 +83,7 @@ When users interact with an LLM (e.g., via chat), the system must manage state, 
 
 ## Domain Driven Design
 
-<img src="./static/images/ddd.svg" width="500">
+<img src="./static/images/dddv2.svg" width="500">
 
 The above is a high-level overview of the software design. Each layer and domain is separated by clear boundaries, forming a grid-like structure. Every cell in this grid represents a specific responsibility, strictly limited to the domain it belongs to.
 
