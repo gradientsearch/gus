@@ -19,7 +19,7 @@ const ROOT_CONVERSATION_ID = "00000000-0000-0000-0000-000000000000"
 var SYSTEM_PROMPT = Message{
 	ID:      uuid.MustParse("00000000-0000-0000-0000-000000000000"),
 	Role:    RoleSystem,
-	Content: "You are llm being used for testing purposes. I only want you to respond with the following message: ```I’ve received your message, but I’m only able to acknowledge its receipt. Wishing you a great day ahead!",
+	Content: "You are a llm being used for testing purposes. I only want you to respond with the following message: ```I’ve received your message, but I’m only able to acknowledge its receipt. Wishing you a great day ahead!",
 	Order:   0,
 }
 
@@ -52,13 +52,10 @@ func NewBusiness(log *logger.Logger, storer Storer, llm LLM) *Business {
 // Conversation hydrates the conversation with existing messages and updates it with
 // new user messages and the LLM response.
 func (b *Business) Conversation(ctx context.Context, usrConvo Conversation) (Conversation, error) {
-	b.log.Info(ctx, "messages to update", "user messages", fmt.Sprintf("%+v", usrConvo))
 	hydrateConvo, err := b.hydrate(ctx, usrConvo)
 	if err != nil {
 		return Conversation{}, err
 	}
-
-	b.log.Info(ctx, "messages to update", "hydrate messages", fmt.Sprintf("%+v", hydrateConvo.Messages))
 
 	llmMessage, err := b.llm.Chat(hydrateConvo.Messages)
 

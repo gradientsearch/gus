@@ -44,10 +44,13 @@ convo:
 
 next:
 	curl -il \
-	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/conversation" -d  '{"conversationID": "c270b57e-6322-4006-82a3-b5daed17a0cf", "messages": [{"id": "31b2ecfc-170b-11f0-9d62-d73a185a35b2", "role": "user", "content": "Why is the sky blue?"}], "parentMessageID": "00000000-0000-0000-0000-000000000000"}'
+	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/conversation" -d  '{"conversationID": "c270b57e-6322-4006-82a3-b5daed17a0cf", "messages": [{"id": "$(shell uuid | tr -d '\n')", "role": "user", "content": "Message 4"}], "parentMessageID": "00000000-0000-0000-0000-000000000000"}'
 
 load:
 	hey -n 10000 -c 100 http://localhost:3000/liveness
+
+pgadmin:
+	docker run --name pgadmin-container -p 5050:80 -e PGADMIN_DEFAULT_EMAIL=user@domain.com -e PGADMIN_DEFAULT_PASSWORD=password123 -d dpage/pgadmin4
 
 # ==============================================================================
 # Building containers

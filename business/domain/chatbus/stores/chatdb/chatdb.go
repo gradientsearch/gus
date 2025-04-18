@@ -58,15 +58,15 @@ ORDER BY
     m.order ASC;
 `
 
-	var dbCons []conversationMessage
-	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, q, data, &dbCons); err != nil {
+	var dbMessages []conversationMessages
+	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbMessages); err != nil {
 		if errors.Is(err, sqldb.ErrDBNotFound) {
 			return chatbus.Conversation{}, fmt.Errorf("db: %w", chatbus.ErrNotFound)
 		}
 		return chatbus.Conversation{}, fmt.Errorf("db: %w", err)
 	}
 
-	return toBusConversation(dbCons)
+	return toBusConversation(dbMessages)
 }
 
 func (s *Store) Create(ctx context.Context, c chatbus.Conversation) error {
@@ -83,7 +83,7 @@ func (s *Store) Create(ctx context.Context, c chatbus.Conversation) error {
 	VALUES
 		($1, $2, $3)`
 
-	if _, err = tx.ExecContext(ctx, convoQuery, dbCon.ID, dbCon.ParentMessageID, dbCon.UserID); err != nil {
+	if _, err = tx.ExecContext(ctx, convoQuery, dbCon.ConversationID, dbCon.ParentMessageID, dbCon.UserID); err != nil {
 		return fmt.Errorf("db: %w", err)
 	}
 
@@ -94,8 +94,8 @@ func (s *Store) Create(ctx context.Context, c chatbus.Conversation) error {
 		($1, $2, $3, $4, $5)`
 
 	for _, m := range toDbMessages(c.Messages) {
-		s.log.Info(ctx, "dbmessage", "message", fmt.Sprintf("%+v, conID %s", m, dbCon.ID))
-		if _, err = tx.ExecContext(ctx, msgQuery, m.ID, dbCon.ID, m.Role, m.Content, m.Order); err != nil {
+		s.log.Info(ctx, "dbmessage", "message", fmt.Sprintf("%+v, conID %s", m, dbCon.ConversationID))
+		if _, err = tx.ExecContext(ctx, msgQuery, m.MessageID, dbCon.ConversationID, m.Role, m.Content, m.Order); err != nil {
 			return fmt.Errorf("db: %w", err)
 		}
 	}
@@ -121,8 +121,8 @@ func (s *Store) Update(ctx context.Context, c chatbus.Conversation) error {
 		($1, $2, $3, $4, $5)`
 
 	for _, m := range toDbMessages(c.Messages) {
-		s.log.Info(ctx, "dbmessage", "message", fmt.Sprintf("%+v, conID %s", m, dbCon.ID))
-		if _, err = tx.ExecContext(ctx, msgQuery, m.ID, dbCon.ID, m.Role, m.Content, m.Order); err != nil {
+		s.log.Info(ctx, "dbmessage", "message", fmt.Sprintf("%+v, conID %s", m, dbCon.ConversationID))
+		if _, err = tx.ExecContext(ctx, msgQuery, m.MessageID, dbCon.ConversationID, m.Role, m.Content, m.Order); err != nil {
 			return fmt.Errorf("db: %w", err)
 		}
 	}

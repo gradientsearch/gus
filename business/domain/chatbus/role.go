@@ -23,6 +23,10 @@ type Role struct {
 	name string
 }
 
+func NewRole(name string) Role {
+	return Role{name}
+}
+
 func newUserRole(role string) Role {
 	r := Role{role}
 	userRoles[role] = r
