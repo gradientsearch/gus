@@ -3,21 +3,25 @@ package chatapi
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gradientsearch/gus/app/api/errs"
 	"github.com/gradientsearch/gus/app/domain/chatapp"
+	"github.com/gradientsearch/gus/foundation/logger"
 	"github.com/gradientsearch/gus/foundation/web"
 )
 
 type api struct {
 	chatApp *chatapp.App
+	log     *logger.Logger
 }
 
-func newAPI(chat *chatapp.App) *api {
+func newAPI(chat *chatapp.App, log *logger.Logger) *api {
 	return &api{
 		chatApp: chat,
+		log:     log,
 	}
 }
 
@@ -29,6 +33,8 @@ func (api *api) conversation(ctx context.Context, w http.ResponseWriter, r *http
 	if err := web.Decode(r, &c); err != nil {
 		return errs.New(errs.FailedPrecondition, err)
 	}
+
+	api.log.Info(ctx, "api decode", "convo", fmt.Sprintf("%+v", c))
 
 	cr, err := api.chatApp.Conversation(ctx, c)
 

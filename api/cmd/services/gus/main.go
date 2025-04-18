@@ -16,7 +16,14 @@ import (
 	"github.com/gradientsearch/gus/api/cmd/services/gus/build/all"
 	"github.com/gradientsearch/gus/api/http/api/debug"
 	"github.com/gradientsearch/gus/api/http/api/mux"
+	"github.com/gradientsearch/gus/app/api/authclient"
 	"github.com/gradientsearch/gus/business/api/sqldb"
+	"github.com/gradientsearch/gus/business/domain/chatbus"
+	"github.com/gradientsearch/gus/business/domain/chatbus/llms"
+	"github.com/gradientsearch/gus/business/domain/chatbus/llms/llama"
+	"github.com/gradientsearch/gus/business/domain/chatbus/stores/chatdb"
+	"github.com/gradientsearch/gus/business/domain/userbus"
+	"github.com/gradientsearch/gus/business/domain/userbus/stores/userdb"
 	"github.com/gradientsearch/gus/foundation/logger"
 )
 
@@ -57,6 +64,9 @@ func run(ctx context.Context, log *logger.Logger) error {
 			MaxIdleConns int    `conf:"default:2"`
 			MaxOpenConns int    `conf:"default:0"`
 			DisableTLS   bool   `conf:"default:true"`
+		}
+		LLM struct {
+			LLMHost string `conf:"default:http://localllm.dev:11434"`
 		}
 	}{
 		Version: conf.Version{
@@ -107,6 +117,32 @@ func run(ctx context.Context, log *logger.Logger) error {
 		return fmt.Errorf("connecting to db: %w", err)
 	}
 
+	// -------------------------------------------------------------------------
+	// Initialize authentication support
+
+	log.Info(ctx, "startup", "status", "initializing authentication support")
+
+	logFunc := func(ctx context.Context, msg string, v ...any) {
+		log.Info(ctx, msg, v...)
+	}
+	authClient := authclient.New(cfg.Auth.Host, logFunc)
+	// -------------------------------------------------------------------------
+	// Create LLM
+
+	_ = &llama.Llama{
+		BaseURL: "http://localllm.dev:11434",
+		Client:  &http.Client{},
+		Model:   "llama3.2",
+		Stream:  false,
+	}
+
+	mockLlm := &llms.Mock{}
+	// -------------------------------------------------------------------------
+	// Create Business Packages
+
+	userBus := userbus.NewBusiness(log, userdb.NewStore(log, db))
+	chatBus := chatbus.NewBusiness(log, chatdb.NewStore(log, db), mockLlm)
+
 	defer db.Close()
 	// -------------------------------------------------------------------------
 	// Start Debug Service
@@ -123,8 +159,11 @@ func run(ctx context.Context, log *logger.Logger) error {
 	signal.Notify(shutdown, syscall.SIGINT, syscall.SIGINT)
 
 	cfgMux := mux.Config{
-		Build: build,
-		Log:   log,
+		Build:      build,
+		AuthClient: authClient,
+		Log:        log,
+		ChatBus:    chatBus,
+		UserBus:    userBus,
 	}
 
 	api := http.Server{

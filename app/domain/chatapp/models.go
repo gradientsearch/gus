@@ -1,9 +1,11 @@
 package chatapp
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/gradientsearch/gus/app/api/mid"
 	"github.com/gradientsearch/gus/business/domain/chatbus"
 )
 
@@ -47,7 +49,7 @@ func toAppMessages(bus []chatbus.Message) ([]Message, error) {
 	return app, nil
 }
 
-func toBusConversation(con Conversation) (chatbus.Conversation, error) {
+func toBusConversation(ctx context.Context, con Conversation) (chatbus.Conversation, error) {
 	var bus chatbus.Conversation
 
 	if id, err := uuid.Parse(con.ID); err != nil {
@@ -59,7 +61,7 @@ func toBusConversation(con Conversation) (chatbus.Conversation, error) {
 	if id, err := uuid.Parse(con.ParentMessageID); err != nil {
 		return chatbus.Conversation{}, fmt.Errorf("bus ParentMessageID parse: %w", err)
 	} else {
-		bus.ID = id
+		bus.ParentMessageID = id
 	}
 
 	if mes, err := toBusMessages(con.Messages); err != nil {
@@ -68,13 +70,19 @@ func toBusConversation(con Conversation) (chatbus.Conversation, error) {
 		bus.Messages = mes
 	}
 
+	if userID, err := mid.GetUserID(ctx); err != nil {
+		return chatbus.Conversation{}, fmt.Errorf("bus userID parse: %w", err)
+	} else {
+		bus.UserID = userID
+	}
+
 	return bus, nil
 }
 
 func toBusMessages(app []Message) ([]chatbus.Message, error) {
 	bus := make([]chatbus.Message, len(app))
 
-	for _, m := range app {
+	for i, m := range app {
 		var b chatbus.Message
 
 		if id, err := uuid.Parse(m.ID); err != nil {
@@ -83,7 +91,7 @@ func toBusMessages(app []Message) ([]chatbus.Message, error) {
 			b.ID = id
 		}
 
-		if role, err := chatbus.ParseRole(m.Role); err != nil {
+		if role, err := chatbus.ParseUserRoles(m.Role); err != nil {
 			return nil, fmt.Errorf("bus message Role parse: %w", err)
 		} else {
 			b.Role = role
@@ -91,6 +99,8 @@ func toBusMessages(app []Message) ([]chatbus.Message, error) {
 
 		// TODO sanitize content
 		b.Content = m.Content
+
+		bus[i] = b
 	}
 
 	return bus, nil

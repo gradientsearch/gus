@@ -5,14 +5,23 @@ import (
 
 	"github.com/gradientsearch/gus/app/api/errs"
 	"github.com/gradientsearch/gus/business/domain/chatbus"
+	"github.com/gradientsearch/gus/foundation/logger"
 )
 
 type App struct {
 	chatBus chatbus.Business
+	log     *logger.Logger
+}
+
+func New(chatBus chatbus.Business, log *logger.Logger) *App {
+	return &App{
+		chatBus: chatBus,
+		log:     log,
+	}
 }
 
 func (a *App) Conversation(ctx context.Context, con Conversation) (Conversation, error) {
-	bc, err := toBusConversation(con)
+	bc, err := toBusConversation(ctx, con)
 	if err != nil {
 		return Conversation{}, errs.New(errs.FailedPrecondition, err)
 	}

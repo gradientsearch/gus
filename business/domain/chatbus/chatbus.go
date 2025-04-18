@@ -2,24 +2,123 @@ package chatbus
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/gradientsearch/gus/foundation/logger"
 )
 
-type Business struct {
+// Set of error variables for CRUD operations.
+var (
+	ErrNotFound = errors.New("conversation not found")
+)
+
+const ROOT_CONVERSATION_ID = "00000000-0000-0000-0000-000000000000"
+
+var SYSTEM_PROMPT = Message{
+	ID:      uuid.MustParse("00000000-0000-0000-0000-000000000000"),
+	Role:    RoleSystem,
+	Content: "You are a llm being used for testing purposes. I only want you to respond with the following message: ```I’ve received your message, but I’m only able to acknowledge its receipt. Wishing you a great day ahead!",
+	Order:   0,
 }
 
-func (b *Business) Conversation(ctx context.Context, con Conversation) (Conversation, error) {
-	c := Conversation{}
+type Storer interface {
+	QueryById(ctx context.Context, id uuid.UUID, conID uuid.UUID) (Conversation, error)
+	Create(ctx context.Context, c Conversation) error
+	Update(ctx context.Context, c Conversation) error
+}
 
-	c.ID = uuid.New()
-	c.ParentMessageID = uuid.MustParse("00000000-0000-0000-0000-000000000000")
+type LLM interface {
+	Chat(messages []Message) (Message, error)
+}
 
-	m := Message{}
-	m.ID = uuid.New()
-	m.Role = RoleAssistant
-	m.Content = "The sky appears blue to our eyes because of a phenomenon called Rayleigh scattering, named after the British physicist Lord Rayleigh, who first described it in the late 19th century.\n\nHere's what happens:\n\n1. When sunlight enters Earth's atmosphere, it encounters tiny molecules of gases such as nitrogen (N2) and oxygen (O2). These molecules are much smaller than the wavelength of visible light.\n2. The shorter (blue) wavelengths of light are scattered more than the longer (red) wavelengths by these small molecules. This is because the smaller molecules are more effective at scattering the shorter wavelengths due to their size.\n3. As a result, when we look up at the sky, our eyes see the blue color that has been scattered in all directions by the tiny molecules.\n4. The other colors of light, such as red and orange, continue to travel in a straight line through the atmosphere with less scattering, which is why they appear more vibrant when viewed from an overhead angle.\n\nThis effect is more pronounced during the daytime when the sun is high in the sky, and it's also more noticeable on clear days with minimal atmospheric interference. The color of the sky can change depending on various factors like atmospheric conditions, pollution, and time of day.\n\nWould you like to know more about Rayleigh scattering or the physics behind it?"
+type Business struct {
+	log    *logger.Logger
+	storer Storer
+	llm    LLM
+}
 
-	c.Messages = append(c.Messages, m)
-	return c, nil
+// NewBusiness constructs a user business API for use.
+func NewBusiness(log *logger.Logger, storer Storer, llm LLM) *Business {
+
+	return &Business{
+		log:    log,
+		storer: storer,
+		llm:    llm,
+	}
+}
+
+// Conversation hydrates the conversation with existing messages and updates it with
+// new user messages and the LLM response.
+func (b *Business) Conversation(ctx context.Context, usrConvo Conversation) (Conversation, error) {
+	hydrateConvo, err := b.hydrate(ctx, usrConvo)
+	if err != nil {
+		return Conversation{}, err
+	}
+
+	llmMessage, err := b.llm.Chat(hydrateConvo.Messages)
+
+	if err != nil {
+		return Conversation{}, fmt.Errorf("error querying llm: %w", err)
+	}
+
+	err = b.update(ctx, hydrateConvo, usrConvo, llmMessage)
+	if err != nil {
+		return Conversation{}, fmt.Errorf("error updating conversation: %w", err)
+	}
+
+	hydrateConvo.Messages = []Message{llmMessage}
+	return hydrateConvo, nil
+}
+
+// hydrate creates a new conversation with a system prompt if it's the start of a conversation,
+// or returns the existing conversation with the new messages appended.
+func (b *Business) hydrate(ctx context.Context, userConvo Conversation) (Conversation, error) {
+	var (
+		c   Conversation
+		err error
+	)
+
+	if userConvo.ID.String() == ROOT_CONVERSATION_ID {
+		c.ID = uuid.New()
+		c.UserID = userConvo.UserID
+		c.Messages = []Message{SYSTEM_PROMPT}
+		if err := b.storer.Create(ctx, c); err != nil {
+			return Conversation{}, fmt.Errorf("error creating conversation: %w", err)
+		}
+	} else {
+		c, err = b.storer.QueryById(ctx, userConvo.UserID, userConvo.ID)
+		if err != nil {
+			return Conversation{}, fmt.Errorf("error querying conversation: %w", err)
+		}
+	}
+
+	c.Messages = append(c.Messages, userConvo.Messages...)
+
+	return c, err
+}
+
+// Update writes only the new messages to the database and adds the order to the new messages
+func (b *Business) update(ctx context.Context, hydratedConvo Conversation, usrConvo Conversation, llmMessage Message) error {
+	nextOrder := len(hydratedConvo.Messages) - len(usrConvo.Messages)
+
+	updateConvo := Conversation{}
+	updateConvo.ID = hydratedConvo.ID
+	updateConvo.ParentMessageID = hydratedConvo.ParentMessageID
+	updateConvo.UserID = hydratedConvo.UserID
+	updateConvo.Messages = []Message{}
+	updateConvo.Messages = append(updateConvo.Messages, usrConvo.Messages...)
+	updateConvo.Messages = append(updateConvo.Messages, llmMessage)
+
+	for i := range updateConvo.Messages {
+		updateConvo.Messages[i].Order = nextOrder + i
+	}
+
+	b.log.Info(ctx, "messages to update", "messages", fmt.Sprintf("%+v", updateConvo.Messages))
+	if err := b.storer.Update(ctx, updateConvo); err != nil {
+		return fmt.Errorf("error updating conversation: %w", err)
+	}
+
+	return nil
 }

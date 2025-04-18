@@ -8,6 +8,8 @@ import (
 	"github.com/gradientsearch/gus/api/http/api/mid"
 	"github.com/gradientsearch/gus/app/api/auth"
 	"github.com/gradientsearch/gus/app/api/authclient"
+	"github.com/gradientsearch/gus/business/domain/chatbus"
+	"github.com/gradientsearch/gus/business/domain/userbus"
 	"github.com/gradientsearch/gus/foundation/logger"
 	"github.com/gradientsearch/gus/foundation/web"
 	"github.com/jmoiron/sqlx"
@@ -20,6 +22,9 @@ type Config struct {
 	DB         *sqlx.DB
 	Auth       *auth.Auth
 	AuthClient *authclient.Client
+
+	ChatBus *chatbus.Business
+	UserBus *userbus.Business
 }
 
 // RouteAdder defines behavior that sets the routes to bind for an instance
