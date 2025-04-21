@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gradientsearch/gus/app/sdk/auth"
 	"github.com/gradientsearch/gus/app/sdk/authclient"
 	"github.com/gradientsearch/gus/app/sdk/errs"
@@ -13,7 +14,6 @@ import (
 	"github.com/gradientsearch/gus/business/domain/productbus"
 	"github.com/gradientsearch/gus/business/domain/userbus"
 	"github.com/gradientsearch/gus/foundation/web"
-	"github.com/google/uuid"
 )
 
 // ErrInvalidID represents a condition where the id is not a uuid.
