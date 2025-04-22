@@ -1,17 +1,13 @@
 package apitest
 
 import (
-	"github.com/gradientsearch/gus/business/domain/homebus"
-	"github.com/gradientsearch/gus/business/domain/productbus"
 	"github.com/gradientsearch/gus/business/domain/userbus"
 )
 
 // User extends the dbtest user for api test support.
 type User struct {
 	userbus.User
-	Products []productbus.Product
-	Homes    []homebus.Home
-	Token    string
+	Token string
 }
 
 // SeedData represents users for api tests.

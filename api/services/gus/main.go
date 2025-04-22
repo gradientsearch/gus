@@ -23,15 +23,9 @@ import (
 	"github.com/gradientsearch/gus/business/domain/chatbus"
 	"github.com/gradientsearch/gus/business/domain/chatbus/llms"
 	"github.com/gradientsearch/gus/business/domain/chatbus/stores/chatdb"
-	"github.com/gradientsearch/gus/business/domain/homebus"
-	"github.com/gradientsearch/gus/business/domain/homebus/stores/homedb"
-	"github.com/gradientsearch/gus/business/domain/productbus"
-	"github.com/gradientsearch/gus/business/domain/productbus/stores/productdb"
 	"github.com/gradientsearch/gus/business/domain/userbus"
 	"github.com/gradientsearch/gus/business/domain/userbus/stores/usercache"
 	"github.com/gradientsearch/gus/business/domain/userbus/stores/userdb"
-	"github.com/gradientsearch/gus/business/domain/vproductbus"
-	"github.com/gradientsearch/gus/business/domain/vproductbus/stores/vproductdb"
 	"github.com/gradientsearch/gus/business/sdk/delegate"
 	"github.com/gradientsearch/gus/business/sdk/sqldb"
 	"github.com/gradientsearch/gus/foundation/logger"
@@ -206,10 +200,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	delegate := delegate.New(log)
 	userBus := userbus.NewBusiness(log, delegate, usercache.NewStore(log, userdb.NewStore(log, db), time.Minute))
-	productBus := productbus.NewBusiness(log, userBus, delegate, productdb.NewStore(log, db))
-	homeBus := homebus.NewBusiness(log, userBus, delegate, homedb.NewStore(log, db))
 	chatBus := chatbus.NewBusiness(log, chatdb.NewStore(log, db), mockLlm)
-	vproductBus := vproductbus.NewBusiness(vproductdb.NewStore(log, db))
 
 	// -------------------------------------------------------------------------
 	// Start Debug Service
@@ -236,11 +227,8 @@ func run(ctx context.Context, log *logger.Logger) error {
 		DB:     db,
 		Tracer: tracer,
 		BusConfig: mux.BusConfig{
-			UserBus:     userBus,
-			ChatBus:     chatBus,
-			ProductBus:  productBus,
-			HomeBus:     homeBus,
-			VProductBus: vproductBus,
+			UserBus: userBus,
+			ChatBus: chatBus,
 		},
 		GusConfig: mux.GusConfig{
 			AuthClient: authClient,

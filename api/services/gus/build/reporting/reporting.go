@@ -3,7 +3,6 @@ package reporting
 
 import (
 	"github.com/gradientsearch/gus/app/domain/checkapp"
-	"github.com/gradientsearch/gus/app/domain/vproductapp"
 	"github.com/gradientsearch/gus/app/sdk/mux"
 	"github.com/gradientsearch/gus/foundation/web"
 )
@@ -22,11 +21,5 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		Build: cfg.Build,
 		Log:   cfg.Log,
 		DB:    cfg.DB,
-	})
-
-	vproductapp.Routes(app, vproductapp.Config{
-		UserBus:     cfg.BusConfig.UserBus,
-		VProductBus: cfg.BusConfig.VProductBus,
-		AuthClient:  cfg.GusConfig.AuthClient,
 	})
 }

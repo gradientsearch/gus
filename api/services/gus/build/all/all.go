@@ -4,12 +4,8 @@ package all
 import (
 	"github.com/gradientsearch/gus/app/domain/chatapp"
 	"github.com/gradientsearch/gus/app/domain/checkapp"
-	"github.com/gradientsearch/gus/app/domain/homeapp"
-	"github.com/gradientsearch/gus/app/domain/productapp"
 	"github.com/gradientsearch/gus/app/domain/rawapp"
-	"github.com/gradientsearch/gus/app/domain/tranapp"
 	"github.com/gradientsearch/gus/app/domain/userapp"
-	"github.com/gradientsearch/gus/app/domain/vproductapp"
 	"github.com/gradientsearch/gus/app/sdk/mux"
 	"github.com/gradientsearch/gus/foundation/web"
 )
@@ -37,38 +33,11 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		AuthClient: cfg.GusConfig.AuthClient,
 	})
 
-	homeapp.Routes(app, homeapp.Config{
-		Log:        cfg.Log,
-		HomeBus:    cfg.BusConfig.HomeBus,
-		AuthClient: cfg.GusConfig.AuthClient,
-	})
-
-	productapp.Routes(app, productapp.Config{
-		Log:        cfg.Log,
-		ProductBus: cfg.BusConfig.ProductBus,
-		AuthClient: cfg.GusConfig.AuthClient,
-	})
-
 	rawapp.Routes(app)
-
-	tranapp.Routes(app, tranapp.Config{
-		Log:        cfg.Log,
-		DB:         cfg.DB,
-		UserBus:    cfg.BusConfig.UserBus,
-		ProductBus: cfg.BusConfig.ProductBus,
-		AuthClient: cfg.GusConfig.AuthClient,
-	})
 
 	userapp.Routes(app, userapp.Config{
 		Log:        cfg.Log,
 		UserBus:    cfg.BusConfig.UserBus,
 		AuthClient: cfg.GusConfig.AuthClient,
-	})
-
-	vproductapp.Routes(app, vproductapp.Config{
-		Log:         cfg.Log,
-		UserBus:     cfg.BusConfig.UserBus,
-		VProductBus: cfg.BusConfig.VProductBus,
-		AuthClient:  cfg.GusConfig.AuthClient,
 	})
 }

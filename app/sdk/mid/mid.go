@@ -6,12 +6,11 @@ import (
 	"errors"
 
 	"github.com/gradientsearch/gus/app/sdk/auth"
-	"github.com/gradientsearch/gus/business/domain/homebus"
-	"github.com/gradientsearch/gus/business/domain/productbus"
+
+	"github.com/google/uuid"
 	"github.com/gradientsearch/gus/business/domain/userbus"
 	"github.com/gradientsearch/gus/business/sdk/sqldb"
 	"github.com/gradientsearch/gus/foundation/web"
-	"github.com/google/uuid"
 )
 
 // isError tests if the Encoder has an error inside of it.
@@ -72,34 +71,6 @@ func GetUser(ctx context.Context) (userbus.User, error) {
 	v, ok := ctx.Value(userKey).(userbus.User)
 	if !ok {
 		return userbus.User{}, errors.New("user not found in context")
-	}
-
-	return v, nil
-}
-
-func setProduct(ctx context.Context, prd productbus.Product) context.Context {
-	return context.WithValue(ctx, productKey, prd)
-}
-
-// GetProduct returns the product from the context.
-func GetProduct(ctx context.Context) (productbus.Product, error) {
-	v, ok := ctx.Value(productKey).(productbus.Product)
-	if !ok {
-		return productbus.Product{}, errors.New("product not found in context")
-	}
-
-	return v, nil
-}
-
-func setHome(ctx context.Context, hme homebus.Home) context.Context {
-	return context.WithValue(ctx, homeKey, hme)
-}
-
-// GetHome returns the home from the context.
-func GetHome(ctx context.Context) (homebus.Home, error) {
-	v, ok := ctx.Value(homeKey).(homebus.Home)
-	if !ok {
-		return homebus.Home{}, errors.New("home not found in context")
 	}
 
 	return v, nil

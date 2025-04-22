@@ -432,7 +432,7 @@ convo:
 
 next:
 	curl -il \
-	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/conversation" -d  '{"conversationID": "b8d3bc2f-eb29-45de-8cb3-11d6a9662dae", "messages": [{"id": "$(shell uuid | tr -d '\n')", "role": "user", "content": "Message 4"}], "parentMessageID": "00000000-0000-0000-0000-000000000000"}'
+	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/conversation" -d  '{"conversationID": "af5b8b01-be1e-4557-b828-47ed8f39f4ca", "messages": [{"id": "$(shell uuid | tr -d '\n')", "role": "user", "content": "Message 4"}], "parentMessageID": "00000000-0000-0000-0000-000000000000"}'
 
 
 load:

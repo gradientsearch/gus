@@ -3,9 +3,6 @@ package crud
 
 import (
 	"github.com/gradientsearch/gus/app/domain/checkapp"
-	"github.com/gradientsearch/gus/app/domain/homeapp"
-	"github.com/gradientsearch/gus/app/domain/productapp"
-	"github.com/gradientsearch/gus/app/domain/tranapp"
 	"github.com/gradientsearch/gus/app/domain/userapp"
 	"github.com/gradientsearch/gus/app/sdk/mux"
 	"github.com/gradientsearch/gus/foundation/web"
@@ -25,24 +22,6 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		Build: cfg.Build,
 		Log:   cfg.Log,
 		DB:    cfg.DB,
-	})
-
-	homeapp.Routes(app, homeapp.Config{
-		HomeBus:    cfg.BusConfig.HomeBus,
-		AuthClient: cfg.GusConfig.AuthClient,
-	})
-
-	productapp.Routes(app, productapp.Config{
-		ProductBus: cfg.BusConfig.ProductBus,
-		AuthClient: cfg.GusConfig.AuthClient,
-	})
-
-	tranapp.Routes(app, tranapp.Config{
-		UserBus:    cfg.BusConfig.UserBus,
-		ProductBus: cfg.BusConfig.ProductBus,
-		Log:        cfg.Log,
-		AuthClient: cfg.GusConfig.AuthClient,
-		DB:         cfg.DB,
 	})
 
 	userapp.Routes(app, userapp.Config{
