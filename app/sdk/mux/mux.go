@@ -10,6 +10,7 @@ import (
 	"github.com/gradientsearch/gus/app/sdk/authclient"
 	"github.com/gradientsearch/gus/app/sdk/mid"
 	"github.com/gradientsearch/gus/business/domain/conversationbus"
+	"github.com/gradientsearch/gus/business/domain/messagebus"
 	"github.com/gradientsearch/gus/business/domain/userbus"
 	"github.com/gradientsearch/gus/foundation/logger"
 	"github.com/gradientsearch/gus/foundation/web"
@@ -63,6 +64,7 @@ type AuthConfig struct {
 type BusConfig struct {
 	UserBus         *userbus.Business
 	ConversationBus *conversationbus.Business
+	MessageBus      *messagebus.Business
 }
 
 // Config contains all the mandatory systems required by handlers.

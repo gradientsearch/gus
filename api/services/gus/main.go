@@ -23,6 +23,9 @@ import (
 	"github.com/gradientsearch/gus/business/domain/conversationbus"
 	"github.com/gradientsearch/gus/business/domain/conversationbus/llms"
 	"github.com/gradientsearch/gus/business/domain/conversationbus/stores/conversationdb"
+	"github.com/gradientsearch/gus/business/domain/messagebus"
+	messagebusLLM "github.com/gradientsearch/gus/business/domain/messagebus/llms"
+	"github.com/gradientsearch/gus/business/domain/messagebus/stores/messagedb"
 	"github.com/gradientsearch/gus/business/domain/userbus"
 	"github.com/gradientsearch/gus/business/domain/userbus/stores/usercache"
 	"github.com/gradientsearch/gus/business/domain/userbus/stores/userdb"
@@ -195,12 +198,14 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	mockLlm := &llms.Mock{}
 
+	mmockLlm := &messagebusLLM.Mock{}
 	// -------------------------------------------------------------------------
 	// Create Business Packages
 
 	delegate := delegate.New(log)
 	userBus := userbus.NewBusiness(log, delegate, usercache.NewStore(log, userdb.NewStore(log, db), time.Minute))
 	conversationBus := conversationbus.NewBusiness(log, conversationdb.NewStore(log, db), mockLlm)
+	messageBus := messagebus.NewBusiness(log, messagedb.NewStore(log, db), mmockLlm)
 
 	// -------------------------------------------------------------------------
 	// Start Debug Service
@@ -229,6 +234,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		BusConfig: mux.BusConfig{
 			UserBus:         userBus,
 			ConversationBus: conversationBus,
+			MessageBus:      messageBus,
 		},
 		GusConfig: mux.GusConfig{
 			AuthClient: authClient,
