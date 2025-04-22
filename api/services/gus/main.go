@@ -20,9 +20,11 @@ import (
 	"github.com/gradientsearch/gus/app/sdk/authclient"
 	"github.com/gradientsearch/gus/app/sdk/debug"
 	"github.com/gradientsearch/gus/app/sdk/mux"
-	"github.com/gradientsearch/gus/business/domain/chatbus"
-	"github.com/gradientsearch/gus/business/domain/chatbus/llms"
-	"github.com/gradientsearch/gus/business/domain/chatbus/stores/chatdb"
+	"github.com/gradientsearch/gus/business/domain/conversationbus"
+	"github.com/gradientsearch/gus/business/domain/conversationbus/stores/conversationdb"
+	"github.com/gradientsearch/gus/business/domain/dialogbus"
+	dialogbusLLM "github.com/gradientsearch/gus/business/domain/dialogbus/llms"
+	"github.com/gradientsearch/gus/business/domain/dialogbus/stores/dialogdb"
 	"github.com/gradientsearch/gus/business/domain/userbus"
 	"github.com/gradientsearch/gus/business/domain/userbus/stores/usercache"
 	"github.com/gradientsearch/gus/business/domain/userbus/stores/userdb"
@@ -192,15 +194,15 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	// -------------------------------------------------------------------------
 	// mock llm
-
-	mockLlm := &llms.Mock{}
+	mockLLM := &dialogbusLLM.Mock{}
 
 	// -------------------------------------------------------------------------
 	// Create Business Packages
 
 	delegate := delegate.New(log)
 	userBus := userbus.NewBusiness(log, delegate, usercache.NewStore(log, userdb.NewStore(log, db), time.Minute))
-	chatBus := chatbus.NewBusiness(log, chatdb.NewStore(log, db), mockLlm)
+	conversationBus := conversationbus.NewBusiness(log, conversationdb.NewStore(log, db))
+	dialogbus := dialogbus.NewBusiness(log, dialogdb.NewStore(log, db), mockLLM)
 
 	// -------------------------------------------------------------------------
 	// Start Debug Service
@@ -227,8 +229,9 @@ func run(ctx context.Context, log *logger.Logger) error {
 		DB:     db,
 		Tracer: tracer,
 		BusConfig: mux.BusConfig{
-			UserBus: userBus,
-			ChatBus: chatBus,
+			UserBus:         userBus,
+			ConversationBus: conversationBus,
+			DialogBus:       dialogbus,
 		},
 		GusConfig: mux.GusConfig{
 			AuthClient: authClient,

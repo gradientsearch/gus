@@ -1,4 +1,4 @@
-package chatbus
+package dialogbus
 
 import "fmt"
 

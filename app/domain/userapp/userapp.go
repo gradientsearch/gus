@@ -31,12 +31,12 @@ func (a *app) create(ctx context.Context, r *http.Request) web.Encoder {
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	nc, err := toBusNewUser(app)
+	nu, err := toBusNewUser(app)
 	if err != nil {
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	usr, err := a.userBus.Create(ctx, nc)
+	usr, err := a.userBus.Create(ctx, nu)
 	if err != nil {
 		if errors.Is(err, userbus.ErrUniqueEmail) {
 			return errs.New(errs.Aborted, userbus.ErrUniqueEmail)
