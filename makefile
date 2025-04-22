@@ -435,9 +435,9 @@ next:
 	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/conversation" -d  '{"conversationID": "af5b8b01-be1e-4557-b828-47ed8f39f4ca", "messages": [{"id": "$(shell uuid | tr -d '\n')", "role": "user", "content": "Message 4"}], "parentMessageID": "00000000-0000-0000-0000-000000000000"}'
 
 
-messages:
+dialog:
 	curl -il \
-	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/messages" -d  '{"conversationID": "53c1d1dd-8b23-49c7-a0ce-eb6a2747c5a4", "messages": [{"id": "$(shell uuid | tr -d '\n')", "role": "user", "content": "Message 4"}], "parentMessageID": "00000000-0000-0000-0000-000000000000"}'
+	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/dialog" -d  '{"conversationID": "c316742b-2822-4133-85d6-83580cea5619", "messages": [{"id": "$(shell uuid | tr -d '\n')", "role": "user", "content": "Message 4"}], "parentMessageID": "00000000-0000-0000-0000-000000000000"}'
 
 
 load:

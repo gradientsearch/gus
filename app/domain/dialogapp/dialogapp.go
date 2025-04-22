@@ -1,29 +1,29 @@
-package messageapp
+package dialogapp
 
 import (
 	"context"
 	"net/http"
 
 	"github.com/gradientsearch/gus/app/sdk/errs"
-	"github.com/gradientsearch/gus/business/domain/messagebus"
+	"github.com/gradientsearch/gus/business/domain/dialogbus"
 	"github.com/gradientsearch/gus/foundation/logger"
 	"github.com/gradientsearch/gus/foundation/web"
 )
 
 type App struct {
-	messagebus messagebus.Business
-	log        *logger.Logger
+	dialogbus dialogbus.Business
+	log       *logger.Logger
 }
 
-func newApp(messagebus messagebus.Business, log *logger.Logger) *App {
+func newApp(dialogbus dialogbus.Business, log *logger.Logger) *App {
 	return &App{
-		messagebus: messagebus,
-		log:        log,
+		dialogbus: dialogbus,
+		log:       log,
 	}
 }
 
-func (a *App) conversation(ctx context.Context, r *http.Request) web.Encoder {
-	var app Conversation
+func (a *App) create(ctx context.Context, r *http.Request) web.Encoder {
+	var app Dialog
 	if err := web.Decode(r, &app); err != nil {
 		return errs.New(errs.InvalidArgument, err)
 	}
@@ -33,7 +33,7 @@ func (a *App) conversation(ctx context.Context, r *http.Request) web.Encoder {
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	c, err := a.messagebus.Conversation(ctx, bc)
+	c, err := a.dialogbus.Create(ctx, bc)
 	if err != nil {
 		return errs.New(errs.Internal, err)
 	}

@@ -4,7 +4,7 @@ package all
 import (
 	"github.com/gradientsearch/gus/app/domain/checkapp"
 	"github.com/gradientsearch/gus/app/domain/conversationapp"
-	"github.com/gradientsearch/gus/app/domain/messageapp"
+	"github.com/gradientsearch/gus/app/domain/dialogapp"
 	"github.com/gradientsearch/gus/app/domain/rawapp"
 	"github.com/gradientsearch/gus/app/domain/userapp"
 	"github.com/gradientsearch/gus/app/sdk/mux"
@@ -34,10 +34,10 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		AuthClient:      cfg.GusConfig.AuthClient,
 	})
 
-	messageapp.Routes(app, messageapp.Config{
+	dialogapp.Routes(app, dialogapp.Config{
 		Log:        cfg.Log,
 		UserBus:    cfg.BusConfig.UserBus,
-		MessageBus: cfg.BusConfig.MessageBus,
+		DialogBus:  cfg.BusConfig.DialogBus,
 		AuthClient: cfg.GusConfig.AuthClient,
 	})
 

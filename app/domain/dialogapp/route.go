@@ -1,4 +1,4 @@
-package messageapp
+package dialogapp
 
 import (
 	"net/http"
@@ -6,7 +6,7 @@ import (
 	"github.com/gradientsearch/gus/app/sdk/auth"
 	"github.com/gradientsearch/gus/app/sdk/authclient"
 	"github.com/gradientsearch/gus/app/sdk/mid"
-	"github.com/gradientsearch/gus/business/domain/messagebus"
+	"github.com/gradientsearch/gus/business/domain/dialogbus"
 	"github.com/gradientsearch/gus/business/domain/userbus"
 	"github.com/gradientsearch/gus/foundation/logger"
 	"github.com/gradientsearch/gus/foundation/web"
@@ -15,7 +15,7 @@ import (
 type Config struct {
 	Log        *logger.Logger
 	UserBus    *userbus.Business
-	MessageBus *messagebus.Business
+	DialogBus  *dialogbus.Business
 	AuthClient *authclient.Client
 }
 
@@ -26,7 +26,7 @@ func Routes(app *web.App, cfg Config) {
 	authen := mid.Authenticate(cfg.AuthClient)
 	ruleAdminOrSubject := mid.Authorize(cfg.AuthClient, auth.RuleAdminOrSubject)
 
-	api := newApp(*cfg.MessageBus, cfg.Log)
+	api := newApp(*cfg.DialogBus, cfg.Log)
 
-	app.HandlerFunc(http.MethodPost, version, "/messages", api.conversation, authen, ruleAdminOrSubject)
+	app.HandlerFunc(http.MethodPost, version, "/dialog", api.create, authen, ruleAdminOrSubject)
 }

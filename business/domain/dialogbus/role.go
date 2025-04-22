@@ -1,4 +1,4 @@
-package messagebus
+package dialogbus
 
 import "fmt"
 

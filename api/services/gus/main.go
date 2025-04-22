@@ -21,11 +21,10 @@ import (
 	"github.com/gradientsearch/gus/app/sdk/debug"
 	"github.com/gradientsearch/gus/app/sdk/mux"
 	"github.com/gradientsearch/gus/business/domain/conversationbus"
-	"github.com/gradientsearch/gus/business/domain/conversationbus/llms"
 	"github.com/gradientsearch/gus/business/domain/conversationbus/stores/conversationdb"
-	"github.com/gradientsearch/gus/business/domain/messagebus"
-	messagebusLLM "github.com/gradientsearch/gus/business/domain/messagebus/llms"
-	"github.com/gradientsearch/gus/business/domain/messagebus/stores/messagedb"
+	"github.com/gradientsearch/gus/business/domain/dialogbus"
+	dialogbusLLM "github.com/gradientsearch/gus/business/domain/dialogbus/llms"
+	"github.com/gradientsearch/gus/business/domain/dialogbus/stores/dialogdb"
 	"github.com/gradientsearch/gus/business/domain/userbus"
 	"github.com/gradientsearch/gus/business/domain/userbus/stores/usercache"
 	"github.com/gradientsearch/gus/business/domain/userbus/stores/userdb"
@@ -195,17 +194,15 @@ func run(ctx context.Context, log *logger.Logger) error {
 
 	// -------------------------------------------------------------------------
 	// mock llm
+	mockLLM := &dialogbusLLM.Mock{}
 
-	mockLlm := &llms.Mock{}
-
-	mmockLlm := &messagebusLLM.Mock{}
 	// -------------------------------------------------------------------------
 	// Create Business Packages
 
 	delegate := delegate.New(log)
 	userBus := userbus.NewBusiness(log, delegate, usercache.NewStore(log, userdb.NewStore(log, db), time.Minute))
-	conversationBus := conversationbus.NewBusiness(log, conversationdb.NewStore(log, db), mockLlm)
-	messageBus := messagebus.NewBusiness(log, messagedb.NewStore(log, db), mmockLlm)
+	conversationBus := conversationbus.NewBusiness(log, conversationdb.NewStore(log, db))
+	dialogbus := dialogbus.NewBusiness(log, dialogdb.NewStore(log, db), mockLLM)
 
 	// -------------------------------------------------------------------------
 	// Start Debug Service
@@ -234,7 +231,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		BusConfig: mux.BusConfig{
 			UserBus:         userBus,
 			ConversationBus: conversationBus,
-			MessageBus:      messageBus,
+			DialogBus:       dialogbus,
 		},
 		GusConfig: mux.GusConfig{
 			AuthClient: authClient,
