@@ -20,6 +20,9 @@ import (
 	"github.com/gradientsearch/gus/app/sdk/authclient"
 	"github.com/gradientsearch/gus/app/sdk/debug"
 	"github.com/gradientsearch/gus/app/sdk/mux"
+	"github.com/gradientsearch/gus/business/domain/chatbus"
+	"github.com/gradientsearch/gus/business/domain/chatbus/llms"
+	"github.com/gradientsearch/gus/business/domain/chatbus/stores/chatdb"
 	"github.com/gradientsearch/gus/business/domain/homebus"
 	"github.com/gradientsearch/gus/business/domain/homebus/stores/homedb"
 	"github.com/gradientsearch/gus/business/domain/productbus"
@@ -194,12 +197,18 @@ func run(ctx context.Context, log *logger.Logger) error {
 	tracer := traceProvider.Tracer(cfg.Tempo.ServiceName)
 
 	// -------------------------------------------------------------------------
+	// mock llm
+
+	mockLlm := &llms.Mock{}
+
+	// -------------------------------------------------------------------------
 	// Create Business Packages
 
 	delegate := delegate.New(log)
 	userBus := userbus.NewBusiness(log, delegate, usercache.NewStore(log, userdb.NewStore(log, db), time.Minute))
 	productBus := productbus.NewBusiness(log, userBus, delegate, productdb.NewStore(log, db))
 	homeBus := homebus.NewBusiness(log, userBus, delegate, homedb.NewStore(log, db))
+	chatBus := chatbus.NewBusiness(log, chatdb.NewStore(log, db), mockLlm)
 	vproductBus := vproductbus.NewBusiness(vproductdb.NewStore(log, db))
 
 	// -------------------------------------------------------------------------
@@ -228,6 +237,7 @@ func run(ctx context.Context, log *logger.Logger) error {
 		Tracer: tracer,
 		BusConfig: mux.BusConfig{
 			UserBus:     userBus,
+			ChatBus:     chatBus,
 			ProductBus:  productBus,
 			HomeBus:     homeBus,
 			VProductBus: vproductBus,

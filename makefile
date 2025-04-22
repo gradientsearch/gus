@@ -424,6 +424,17 @@ users-timeout:
 	--max-time 1 \
 	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"
 
+
+convo:
+	curl -X POST -il \
+	-H "Content-Type: application/json" -H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/conversation" -d  '{"conversationID": "00000000-0000-0000-0000-000000000000", "messages": [{"id": "31b2ecfc-170b-11f0-9d62-d73a185a35b3", "role": "user", "content": "Why is the sky blue?"}], "parentMessageID": "00000000-0000-0000-0000-000000000000"}'
+
+
+next:
+	curl -il \
+	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/conversation" -d  '{"conversationID": "b8d3bc2f-eb29-45de-8cb3-11d6a9662dae", "messages": [{"id": "$(shell uuid | tr -d '\n')", "role": "user", "content": "Message 4"}], "parentMessageID": "00000000-0000-0000-0000-000000000000"}'
+
+
 load:
 	hey -m GET -c 100 -n 2000 \
 	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/users?page=1&rows=2"

@@ -2,6 +2,7 @@
 package all
 
 import (
+	"github.com/gradientsearch/gus/app/domain/chatapp"
 	"github.com/gradientsearch/gus/app/domain/checkapp"
 	"github.com/gradientsearch/gus/app/domain/homeapp"
 	"github.com/gradientsearch/gus/app/domain/productapp"
@@ -27,6 +28,13 @@ func (add) Add(app *web.App, cfg mux.Config) {
 		Build: cfg.Build,
 		Log:   cfg.Log,
 		DB:    cfg.DB,
+	})
+
+	chatapp.Routes(app, chatapp.Config{
+		Log:        cfg.Log,
+		UserBus:    cfg.BusConfig.UserBus,
+		ChatBus:    cfg.BusConfig.ChatBus,
+		AuthClient: cfg.SalesConfig.AuthClient,
 	})
 
 	homeapp.Routes(app, homeapp.Config{

@@ -24,9 +24,9 @@ func Routes(app *web.App, cfg Config) {
 	const version = "v1"
 
 	authen := mid.Authenticate(cfg.AuthClient)
-	ruleUserOnly := mid.Authorize(cfg.AuthClient, auth.RuleUserOnly)
+	ruleAdminOrSubject := mid.Authorize(cfg.AuthClient, auth.RuleAdminOrSubject)
 
 	api := newApp(*cfg.ChatBus, cfg.Log)
 
-	app.HandlerFunc(http.MethodPost, "POST /conversation", version, api.conversation, authen, ruleUserOnly)
+	app.HandlerFunc(http.MethodPost, version, "/conversation", api.conversation, authen, ruleAdminOrSubject)
 }
