@@ -6,13 +6,13 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/gradientsearch/gus/business/domain/chatbus"
+	"github.com/gradientsearch/gus/business/domain/conversationbus"
 )
 
 type StorerMock struct{}
 
-func (s *StorerMock) QueryById(ctx context.Context, userID uuid.UUID, conID uuid.UUID) (chatbus.Conversation, error) {
-	return chatbus.Conversation{}, nil
+func (s *StorerMock) QueryById(ctx context.Context, userID uuid.UUID, conID uuid.UUID) (conversationbus.Conversation, error) {
+	return conversationbus.Conversation{}, nil
 }
 
 func TestQueryLLM(t *testing.T) {
@@ -23,15 +23,15 @@ func TestQueryLLM(t *testing.T) {
 		Stream:  false,
 	}
 
-	ms := []chatbus.Message{}
+	ms := []conversationbus.Message{}
 
-	sys := chatbus.Message{}
-	sys.Role = chatbus.RoleSystem
+	sys := conversationbus.Message{}
+	sys.Role = conversationbus.RoleSystem
 	sys.Content = "You are llm being used for testing purposes. I only want you to respond with the following message: ```I’ve received your message, but I’m only able to acknowledge its receipt. Wishing you a great day ahead!"
 	sys.ID = uuid.New()
 
-	m1 := chatbus.Message{}
-	m1.Role = chatbus.RoleUser
+	m1 := conversationbus.Message{}
+	m1.Role = conversationbus.RoleUser
 	m1.Content = "My name is stephen!"
 	m1.ID = uuid.New()
 

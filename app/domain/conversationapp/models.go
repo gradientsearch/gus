@@ -1,4 +1,4 @@
-package chatapp
+package conversationapp
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gradientsearch/gus/app/sdk/errs"
 	"github.com/gradientsearch/gus/app/sdk/mid"
-	"github.com/gradientsearch/gus/business/domain/chatbus"
+	"github.com/gradientsearch/gus/business/domain/conversationbus"
 )
 
 type Conversation struct {
@@ -43,7 +43,7 @@ type Message struct {
 	Content string `json:"content"`
 }
 
-func toAppConversation(bus chatbus.Conversation) (Conversation, error) {
+func toAppConversation(bus conversationbus.Conversation) (Conversation, error) {
 	var app Conversation
 
 	app.ID = bus.ID.String()
@@ -58,7 +58,7 @@ func toAppConversation(bus chatbus.Conversation) (Conversation, error) {
 	return app, nil
 }
 
-func toAppMessages(bus []chatbus.Message) ([]Message, error) {
+func toAppMessages(bus []conversationbus.Message) ([]Message, error) {
 	app := make([]Message, len(bus))
 	for i, b := range bus {
 		var a Message
@@ -71,29 +71,29 @@ func toAppMessages(bus []chatbus.Message) ([]Message, error) {
 	return app, nil
 }
 
-func toBusConversation(ctx context.Context, con Conversation) (chatbus.Conversation, error) {
-	var bus chatbus.Conversation
+func toBusConversation(ctx context.Context, con Conversation) (conversationbus.Conversation, error) {
+	var bus conversationbus.Conversation
 
 	if id, err := uuid.Parse(con.ID); err != nil {
-		return chatbus.Conversation{}, fmt.Errorf("bus ID parse: %w", err)
+		return conversationbus.Conversation{}, fmt.Errorf("bus ID parse: %w", err)
 	} else {
 		bus.ID = id
 	}
 
 	if id, err := uuid.Parse(con.ParentMessageID); err != nil {
-		return chatbus.Conversation{}, fmt.Errorf("bus ParentMessageID parse: %w", err)
+		return conversationbus.Conversation{}, fmt.Errorf("bus ParentMessageID parse: %w", err)
 	} else {
 		bus.ParentMessageID = id
 	}
 
 	if mes, err := toBusMessages(con.Messages); err != nil {
-		return chatbus.Conversation{}, err
+		return conversationbus.Conversation{}, err
 	} else {
 		bus.Messages = mes
 	}
 
 	if userID, err := mid.GetUserID(ctx); err != nil {
-		return chatbus.Conversation{}, fmt.Errorf("bus userID parse: %w", err)
+		return conversationbus.Conversation{}, fmt.Errorf("bus userID parse: %w", err)
 	} else {
 		bus.UserID = userID
 	}
@@ -101,11 +101,11 @@ func toBusConversation(ctx context.Context, con Conversation) (chatbus.Conversat
 	return bus, nil
 }
 
-func toBusMessages(app []Message) ([]chatbus.Message, error) {
-	bus := make([]chatbus.Message, len(app))
+func toBusMessages(app []Message) ([]conversationbus.Message, error) {
+	bus := make([]conversationbus.Message, len(app))
 
 	for i, m := range app {
-		var b chatbus.Message
+		var b conversationbus.Message
 
 		if id, err := uuid.Parse(m.ID); err != nil {
 			return nil, fmt.Errorf("bus message ID parse: %w", err)
@@ -113,7 +113,7 @@ func toBusMessages(app []Message) ([]chatbus.Message, error) {
 			b.ID = id
 		}
 
-		if role, err := chatbus.ParseUserRoles(m.Role); err != nil {
+		if role, err := conversationbus.ParseUserRoles(m.Role); err != nil {
 			return nil, fmt.Errorf("bus message Role parse: %w", err)
 		} else {
 			b.Role = role

@@ -1,4 +1,4 @@
-package chatdb
+package conversationdb
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/gradientsearch/gus/business/domain/chatbus"
+	"github.com/gradientsearch/gus/business/domain/conversationbus"
 	"github.com/gradientsearch/gus/business/sdk/sqldb"
 	"github.com/gradientsearch/gus/foundation/logger"
 	"github.com/jmoiron/sqlx"
@@ -31,7 +31,7 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 }
 
 // QueryByID gets the specified conversation from the database.
-func (s *Store) QueryById(ctx context.Context, userID uuid.UUID, conID uuid.UUID) (chatbus.Conversation, error) {
+func (s *Store) QueryById(ctx context.Context, userID uuid.UUID, conID uuid.UUID) (conversationbus.Conversation, error) {
 	data := struct {
 		ConversationID string `db:"conversation_id"`
 		UserID         string `db:"user_id"`
@@ -62,15 +62,15 @@ ORDER BY
 	var dbMessages []conversationMessages
 	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbMessages); err != nil {
 		if errors.Is(err, sqldb.ErrDBNotFound) {
-			return chatbus.Conversation{}, fmt.Errorf("db: %w", chatbus.ErrNotFound)
+			return conversationbus.Conversation{}, fmt.Errorf("db: %w", conversationbus.ErrNotFound)
 		}
-		return chatbus.Conversation{}, fmt.Errorf("db: %w", err)
+		return conversationbus.Conversation{}, fmt.Errorf("db: %w", err)
 	}
 
 	return toBusConversation(dbMessages)
 }
 
-func (s *Store) Create(ctx context.Context, c chatbus.Conversation) error {
+func (s *Store) Create(ctx context.Context, c conversationbus.Conversation) error {
 	dbCon := toDbConversation(c)
 
 	tx, err := s.tx.DB.Begin()
@@ -108,7 +108,7 @@ func (s *Store) Create(ctx context.Context, c chatbus.Conversation) error {
 	return nil
 }
 
-func (s *Store) Update(ctx context.Context, c chatbus.Conversation) error {
+func (s *Store) Update(ctx context.Context, c conversationbus.Conversation) error {
 	dbCon := toDbConversation(c)
 	tx, err := s.tx.DB.Begin()
 

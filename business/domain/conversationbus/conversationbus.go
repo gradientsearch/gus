@@ -1,4 +1,4 @@
-package chatbus
+package conversationbus
 
 import (
 	"context"

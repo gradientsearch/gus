@@ -1,24 +1,24 @@
-package chatapp
+package conversationapp
 
 import (
 	"context"
 	"net/http"
 
 	"github.com/gradientsearch/gus/app/sdk/errs"
-	"github.com/gradientsearch/gus/business/domain/chatbus"
+	"github.com/gradientsearch/gus/business/domain/conversationbus"
 	"github.com/gradientsearch/gus/foundation/logger"
 	"github.com/gradientsearch/gus/foundation/web"
 )
 
 type App struct {
-	chatBus chatbus.Business
-	log     *logger.Logger
+	conversationbus conversationbus.Business
+	log             *logger.Logger
 }
 
-func newApp(chatBus chatbus.Business, log *logger.Logger) *App {
+func newApp(conversationbus conversationbus.Business, log *logger.Logger) *App {
 	return &App{
-		chatBus: chatBus,
-		log:     log,
+		conversationbus: conversationbus,
+		log:             log,
 	}
 }
 
@@ -33,7 +33,7 @@ func (a *App) conversation(ctx context.Context, r *http.Request) web.Encoder {
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	c, err := a.chatBus.Conversation(ctx, bc)
+	c, err := a.conversationbus.Conversation(ctx, bc)
 	if err != nil {
 		return errs.New(errs.Internal, err)
 	}
