@@ -53,8 +53,8 @@ func WithFileServer(react bool, static embed.FS, dir string, path string) func(o
 	}
 }
 
-// SalesConfig contains sales service specific config.
-type SalesConfig struct {
+// GusConfig contains gus service specific config.
+type GusConfig struct {
 	AuthClient *authclient.Client
 }
 
@@ -73,13 +73,13 @@ type BusConfig struct {
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	Build       string
-	Log         *logger.Logger
-	DB          *sqlx.DB
-	Tracer      trace.Tracer
-	BusConfig   BusConfig
-	SalesConfig SalesConfig
-	AuthConfig  AuthConfig
+	Build      string
+	Log        *logger.Logger
+	DB         *sqlx.DB
+	Tracer     trace.Tracer
+	BusConfig  BusConfig
+	GusConfig  GusConfig
+	AuthConfig AuthConfig
 }
 
 // RouteAdder defines behavior that sets the routes to bind for an instance

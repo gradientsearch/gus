@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	authbuild "github.com/gradientsearch/gus/api/services/auth/build/all"
-	salesbuild "github.com/gradientsearch/gus/api/services/sales/build/all"
+	gusbuild "github.com/gradientsearch/gus/api/services/gus/build/all"
 	"github.com/gradientsearch/gus/app/sdk/auth"
 	"github.com/gradientsearch/gus/app/sdk/authclient"
 	"github.com/gradientsearch/gus/app/sdk/mux"
@@ -53,10 +53,10 @@ func New(t *testing.T, testName string) *Test {
 			HomeBus:     db.BusDomain.Home,
 			VProductBus: db.BusDomain.VProduct,
 		},
-		SalesConfig: mux.SalesConfig{
+		GusConfig: mux.GusConfig{
 			AuthClient: authClient,
 		},
-	}, salesbuild.Routes())
+	}, gusbuild.Routes())
 
 	return &Test{
 		DB:   db,

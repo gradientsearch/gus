@@ -1,4 +1,4 @@
-// This program performs administrative tasks for the garage sale service.
+// This program performs administrative tasks for the gus service.
 package main
 
 import (
@@ -9,10 +9,10 @@ import (
 	"os"
 
 	"github.com/ardanlabs/conf/v3"
+	"github.com/google/uuid"
 	"github.com/gradientsearch/gus/api/tooling/admin/commands"
 	"github.com/gradientsearch/gus/business/sdk/sqldb"
 	"github.com/gradientsearch/gus/foundation/logger"
-	"github.com/google/uuid"
 )
 
 var build = "develop"
@@ -54,7 +54,7 @@ func run(log *logger.Logger) error {
 		},
 	}
 
-	const prefix = "SALES"
+	const prefix = "GUS"
 	help, err := conf.Parse(prefix, &cfg)
 	if err != nil {
 		if errors.Is(err, conf.ErrHelpWanted) {

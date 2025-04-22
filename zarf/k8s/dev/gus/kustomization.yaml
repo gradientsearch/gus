@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base/gus/
+  - ./dev-gus-configmap.yaml
+patches:
+  - path: ./dev-gus-patch-deploy.yaml
+  - path: ./dev-gus-patch-service.yaml
+images:
+  - name: gus-image
+    newName: localhost/ardanlabs/gus
+    newTag: 0.0.1
+  - name: metrics-image
+    newName: localhost/ardanlabs/metrics
+    newTag: 0.0.1
