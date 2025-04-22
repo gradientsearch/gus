@@ -28,5 +28,5 @@ func Routes(app *web.App, cfg Config) {
 
 	api := newApp(*cfg.ConversationBus, cfg.Log)
 
-	app.HandlerFunc(http.MethodPost, version, "/conversation", api.conversation, authen, ruleAdminOrSubject)
+	app.HandlerFunc(http.MethodPost, version, "/conversation", api.create, authen, ruleAdminOrSubject)
 }

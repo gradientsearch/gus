@@ -12,9 +12,8 @@ import (
 )
 
 type Conversation struct {
-	ID              string    `json:"conversationID"`
-	Messages        []Message `json:"messages"`
-	ParentMessageID string    `json:"parentMessageID"`
+	ID              string `json:"conversationID"`
+	ParentMessageID string `json:"parentMessageID"`
 }
 
 // the decoder interface.
@@ -49,25 +48,6 @@ func toAppConversation(bus conversationbus.Conversation) (Conversation, error) {
 	app.ID = bus.ID.String()
 	app.ParentMessageID = bus.ParentMessageID.String()
 
-	if m, err := toAppMessages(bus.Messages); err != nil {
-		return Conversation{}, err
-	} else {
-		app.Messages = m
-	}
-
-	return app, nil
-}
-
-func toAppMessages(bus []conversationbus.Message) ([]Message, error) {
-	app := make([]Message, len(bus))
-	for i, b := range bus {
-		var a Message
-		a.ID = b.ID.String()
-		a.Role = b.Role.Name()
-		a.Content = b.Content
-		app[i] = a
-	}
-
 	return app, nil
 }
 
@@ -86,43 +66,10 @@ func toBusConversation(ctx context.Context, con Conversation) (conversationbus.C
 		bus.ParentMessageID = id
 	}
 
-	if mes, err := toBusMessages(con.Messages); err != nil {
-		return conversationbus.Conversation{}, err
-	} else {
-		bus.Messages = mes
-	}
-
 	if userID, err := mid.GetUserID(ctx); err != nil {
 		return conversationbus.Conversation{}, fmt.Errorf("bus userID parse: %w", err)
 	} else {
 		bus.UserID = userID
-	}
-
-	return bus, nil
-}
-
-func toBusMessages(app []Message) ([]conversationbus.Message, error) {
-	bus := make([]conversationbus.Message, len(app))
-
-	for i, m := range app {
-		var b conversationbus.Message
-
-		if id, err := uuid.Parse(m.ID); err != nil {
-			return nil, fmt.Errorf("bus message ID parse: %w", err)
-		} else {
-			b.ID = id
-		}
-
-		if role, err := conversationbus.ParseUserRoles(m.Role); err != nil {
-			return nil, fmt.Errorf("bus message Role parse: %w", err)
-		} else {
-			b.Role = role
-		}
-
-		// TODO sanitize content
-		b.Content = m.Content
-
-		bus[i] = b
 	}
 
 	return bus, nil

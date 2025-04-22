@@ -43,95 +43,35 @@ func (s *Store) QueryById(ctx context.Context, userID uuid.UUID, conID uuid.UUID
 	const q = `SELECT
     c.conversation_id,
     c.parent_message_id,
-    c.user_id,
-    m.message_id,
-    m.role,
-    m.content,
-    m.order
+    c.user_id
 FROM
     conversations c
-JOIN
-    messages m ON m.conversation_id = c.conversation_id
 WHERE
     c.user_id = :user_id
     AND c.conversation_id = :conversation_id
-ORDER BY
-    m.order ASC;
 `
 
-	var dbMessages []conversationMessages
-	if err := sqldb.NamedQuerySlice(ctx, s.log, s.db, q, data, &dbMessages); err != nil {
+	var db conversation
+	if err := sqldb.NamedQueryStruct(ctx, s.log, s.db, q, data, &db); err != nil {
 		if errors.Is(err, sqldb.ErrDBNotFound) {
 			return conversationbus.Conversation{}, fmt.Errorf("db: %w", conversationbus.ErrNotFound)
 		}
 		return conversationbus.Conversation{}, fmt.Errorf("db: %w", err)
 	}
 
-	return toBusConversation(dbMessages)
+	return toBusConversation(db)
 }
 
 func (s *Store) Create(ctx context.Context, c conversationbus.Conversation) error {
-	dbCon := toDbConversation(c)
-
-	tx, err := s.tx.DB.Begin()
-	if err != nil {
-		return fmt.Errorf("db: %w", err)
-	}
-
-	const convoQuery = `
+	const q = `
 	INSERT INTO conversations
 		(conversation_id, parent_message_id, user_id)
 	VALUES
-		($1, $2, $3)`
+		(:conversation_id, :parent_message_id, :user_id)`
 
-	if _, err = tx.ExecContext(ctx, convoQuery, dbCon.ConversationID, dbCon.ParentMessageID, dbCon.UserID); err != nil {
-		return fmt.Errorf("db: %w", err)
-	}
-
-	const msgQuery = `
-	INSERT INTO messages
-		(message_id, conversation_id, role, content, "order")
-	VALUES
-		($1, $2, $3, $4, $5)`
-
-	for _, m := range toDbMessages(c.Messages) {
-		s.log.Info(ctx, "dbmessage", "message", fmt.Sprintf("%+v, conID %s", m, dbCon.ConversationID))
-		if _, err = tx.ExecContext(ctx, msgQuery, m.MessageID, dbCon.ConversationID, m.Role, m.Content, m.Order); err != nil {
-			return fmt.Errorf("db: %w", err)
-		}
-	}
-
-	if err = tx.Commit(); err != nil {
+	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, toDbConversation(c)); err != nil {
 		return fmt.Errorf("db: %w", err)
 	}
 
 	return nil
-}
-
-func (s *Store) Update(ctx context.Context, c conversationbus.Conversation) error {
-	dbCon := toDbConversation(c)
-	tx, err := s.tx.DB.Begin()
-
-	if err != nil {
-		return fmt.Errorf("db: %w", err)
-	}
-	const msgQuery = `
-	INSERT INTO messages
-		(message_id, conversation_id, role, content, "order")
-	VALUES
-		($1, $2, $3, $4, $5)`
-
-	for _, m := range toDbMessages(c.Messages) {
-		s.log.Info(ctx, "dbmessage", "message", fmt.Sprintf("%+v, conID %s", m, dbCon.ConversationID))
-		if _, err = tx.ExecContext(ctx, msgQuery, m.MessageID, dbCon.ConversationID, m.Role, m.Content, m.Order); err != nil {
-			return fmt.Errorf("db: %w", err)
-		}
-	}
-
-	if err = tx.Commit(); err != nil {
-		return fmt.Errorf("db: %w", err)
-	}
-
-	return nil
-
 }

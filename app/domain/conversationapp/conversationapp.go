@@ -22,7 +22,7 @@ func newApp(conversationbus conversationbus.Business, log *logger.Logger) *App {
 	}
 }
 
-func (a *App) conversation(ctx context.Context, r *http.Request) web.Encoder {
+func (a *App) create(ctx context.Context, r *http.Request) web.Encoder {
 	var app Conversation
 	if err := web.Decode(r, &app); err != nil {
 		return errs.New(errs.InvalidArgument, err)
