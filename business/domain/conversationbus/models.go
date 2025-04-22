@@ -15,3 +15,8 @@ type Message struct {
 	Content string    `json:"content"`
 	Order   int       `json:"order"`
 }
+
+type NewConversation struct {
+	ID     uuid.UUID `json:"conversationID"`
+	UserID uuid.UUID `json:"userID"`
+}

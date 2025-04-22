@@ -62,12 +62,12 @@ WHERE
 	return toBusConversation(db)
 }
 
-func (s *Store) Create(ctx context.Context, c conversationbus.Conversation) error {
+func (s *Store) Create(ctx context.Context, c conversationbus.NewConversation) error {
 	const q = `
 	INSERT INTO conversations
-		(conversation_id, parent_message_id, user_id)
+		(conversation_id, user_id)
 	VALUES
-		(:conversation_id, :parent_message_id, :user_id)`
+		(:conversation_id, :user_id)`
 
 	if err := sqldb.NamedExecContext(ctx, s.log, s.db, q, toDbConversation(c)); err != nil {
 		return fmt.Errorf("db: %w", err)

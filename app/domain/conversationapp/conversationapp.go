@@ -11,37 +11,32 @@ import (
 )
 
 type App struct {
-	conversationbus conversationbus.Business
+	conversationBus conversationbus.Business
 	log             *logger.Logger
 }
 
-func newApp(conversationbus conversationbus.Business, log *logger.Logger) *App {
+func newApp(conversationBus conversationbus.Business, log *logger.Logger) *App {
 	return &App{
-		conversationbus: conversationbus,
+		conversationBus: conversationBus,
 		log:             log,
 	}
 }
 
 func (a *App) create(ctx context.Context, r *http.Request) web.Encoder {
-	var app Conversation
-	if err := web.Decode(r, &app); err != nil {
-		return errs.New(errs.InvalidArgument, err)
-	}
-
-	bc, err := toBusConversation(ctx, app)
+	newBus, err := toBusNewConversation(ctx)
 	if err != nil {
 		return errs.New(errs.FailedPrecondition, err)
 	}
 
-	c, err := a.conversationbus.Conversation(ctx, bc)
+	c, err := a.conversationBus.Create(ctx, newBus)
 	if err != nil {
 		return errs.New(errs.Internal, err)
 	}
 
-	ac, err := toAppConversation(c)
+	app, err := toAppConversation(c)
 	if err != nil {
 		return errs.New(errs.Internal, err)
 	}
 
-	return ac
+	return app
 }
