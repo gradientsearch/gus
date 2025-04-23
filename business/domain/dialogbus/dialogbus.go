@@ -6,6 +6,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/gradientsearch/gus/business/sdk/delegate"
+	"github.com/gradientsearch/gus/business/sdk/sqldb"
 	"github.com/gradientsearch/gus/foundation/logger"
 )
 
@@ -22,6 +24,8 @@ var SYSTEM_PROMPT = Message{
 }
 
 type Storer interface {
+	NewWithTx(tx sqldb.CommitRollbacker) (Storer, error)
+
 	QueryById(ctx context.Context, id uuid.UUID, conID uuid.UUID) (Dialog, error)
 	Create(ctx context.Context, c Dialog) error
 }
@@ -31,19 +35,38 @@ type LLM interface {
 }
 
 type Business struct {
-	log    *logger.Logger
-	storer Storer
-	llm    LLM
+	log      *logger.Logger
+	storer   Storer
+	delegate *delegate.Delegate
+	llm      LLM
 }
 
 // NewBusiness constructs a user business API for use.
-func NewBusiness(log *logger.Logger, storer Storer, llm LLM) *Business {
+func NewBusiness(log *logger.Logger, delegate *delegate.Delegate, storer Storer, llm LLM) *Business {
 
 	return &Business{
-		log:    log,
-		storer: storer,
-		llm:    llm,
+		log:      log,
+		storer:   storer,
+		delegate: delegate,
+		llm:      llm,
 	}
+}
+
+// NewWithTx constructs a new business value that will use the
+// specified transaction in any store related calls.
+func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (*Business, error) {
+	storer, err := b.storer.NewWithTx(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	bus := Business{
+		log:      b.log,
+		delegate: b.delegate,
+		storer:   storer,
+	}
+
+	return &bus, nil
 }
 
 // Create hydrates the conversation with existing messages and updates it with
