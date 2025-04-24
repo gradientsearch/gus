@@ -247,6 +247,7 @@ dev-apply:
 dev-restart:
 	kubectl rollout restart deployment $(AUTH_APP) --namespace=$(NAMESPACE)
 	kubectl rollout restart deployment $(GUS_APP) --namespace=$(NAMESPACE)
+	kubectl get pods -w
 
 dev-run: build dev-up dev-load dev-apply
 
@@ -437,8 +438,11 @@ next:
 
 dialog:
 	curl -il \
-	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/dialog" -d  '{"conversationID": "c316742b-2822-4133-85d6-83580cea5619", "messages": [{"id": "$(shell uuid | tr -d '\n')", "role": "user", "content": "Message 4"}], "parentMessageID": "00000000-0000-0000-0000-000000000000"}'
+	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/dialog" -d  '{"conversationID": "08c62edd-4c47-489e-9237-35b4e32e3f72", "messages": [{"id": "$(shell uuid | tr -d '\n')", "role": "user", "content": "Message 4"}], "parentMessageID": "00000000-0000-0000-0000-000000000000"}'
 
+genesis:
+	curl -il \
+	-H "Authorization: Bearer ${TOKEN}" "http://localhost:3000/v1/genesis" -d  '{"messages": [{"id": "$(shell uuid | tr -d '\n')", "role": "user", "content": "Message 4"}], "parentMessageID": "00000000-0000-0000-0000-000000000000"}'
 
 load:
 	hey -m GET -c 100 -n 2000 \

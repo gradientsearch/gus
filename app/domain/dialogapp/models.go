@@ -43,7 +43,7 @@ type Message struct {
 	Content string `json:"content"`
 }
 
-func toAppConversation(bus dialogbus.Dialog) (Dialog, error) {
+func toAppDialog(bus dialogbus.Dialog) (Dialog, error) {
 	var app Dialog
 
 	app.ConversationID = bus.ConversationID.String()
@@ -71,7 +71,7 @@ func toAppMessages(bus []dialogbus.Message) ([]Message, error) {
 	return app, nil
 }
 
-func toBusConversation(ctx context.Context, con Dialog) (dialogbus.Dialog, error) {
+func toBusDialog(ctx context.Context, con Dialog) (dialogbus.Dialog, error) {
 	var bus dialogbus.Dialog
 
 	if id, err := uuid.Parse(con.ConversationID); err != nil {

@@ -26,8 +26,23 @@ func NewStore(log *logger.Logger, db *sqlx.DB) *Store {
 	return &Store{
 		log: log,
 		db:  db,
-		tx:  db,
 	}
+}
+
+// NewWithTx constructs a new Store value replacing the sqlx DB
+// value with a sqlx DB value that is currently inside a transaction.
+func (s *Store) NewWithTx(tx sqldb.CommitRollbacker) (conversationbus.Storer, error) {
+	ec, err := sqldb.GetExtContext(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	store := Store{
+		log: s.log,
+		db:  ec,
+	}
+
+	return &store, nil
 }
 
 // QueryByID gets the specified conversation from the database.
