@@ -63,7 +63,9 @@ func (b *Business) NewWithTx(tx sqldb.CommitRollbacker) (*Business, error) {
 	bus := Business{
 		log:      b.log,
 		delegate: b.delegate,
-		storer:   storer,
+		llm:      b.llm,
+
+		storer: storer,
 	}
 
 	return &bus, nil

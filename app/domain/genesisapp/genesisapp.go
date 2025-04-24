@@ -1,5 +1,5 @@
-// Package tranapp maintains the app layer api for the tran domain.
-package tranapp
+// Package genesisapp maintains the app layer api for the tran domain.
+package genesisapp
 
 import (
 	"context"
@@ -51,7 +51,7 @@ func (a *app) newWithTx(ctx context.Context) (*app, error) {
 }
 
 func (a *app) create(ctx context.Context, r *http.Request) web.Encoder {
-	var app NewTran
+	var app NewDialog
 	if err := web.Decode(r, &app); err != nil {
 		return errs.New(errs.InvalidArgument, err)
 	}
@@ -61,5 +61,30 @@ func (a *app) create(ctx context.Context, r *http.Request) web.Encoder {
 		return errs.New(errs.Internal, err)
 	}
 
-	return nil
+	nc, err := toBusNewConversation(ctx)
+	if err != nil {
+		return errs.New(errs.FailedPrecondition, err)
+	}
+
+	c, err := a.conversationBus.Create(ctx, nc)
+	if err != nil {
+		return errs.New(errs.FailedPrecondition, err)
+	}
+
+	nd, err := toBusNewDialog(ctx, app, c.ID)
+	if err != nil {
+		return errs.New(errs.FailedPrecondition, err)
+	}
+
+	bus, err := a.dialogBus.Create(ctx, nd)
+	if err != nil {
+		return errs.New(errs.FailedPrecondition, err)
+	}
+
+	d, err := toAppDialog(bus)
+	if err != nil {
+		return errs.New(errs.FailedPrecondition, err)
+	}
+
+	return d
 }

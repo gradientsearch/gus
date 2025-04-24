@@ -28,7 +28,7 @@ func (a *App) create(ctx context.Context, r *http.Request) web.Encoder {
 		return errs.New(errs.InvalidArgument, err)
 	}
 
-	bc, err := toBusConversation(ctx, app)
+	bc, err := toBusDialog(ctx, app)
 	if err != nil {
 		return errs.New(errs.FailedPrecondition, err)
 	}
@@ -38,7 +38,7 @@ func (a *App) create(ctx context.Context, r *http.Request) web.Encoder {
 		return errs.New(errs.Internal, err)
 	}
 
-	ac, err := toAppConversation(c)
+	ac, err := toAppDialog(c)
 	if err != nil {
 		return errs.New(errs.Internal, err)
 	}

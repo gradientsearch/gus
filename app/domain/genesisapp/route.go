@@ -1,4 +1,4 @@
-package tranapp
+package genesisapp
 
 import (
 	"net/http"
@@ -8,7 +8,6 @@ import (
 	"github.com/gradientsearch/gus/app/sdk/mid"
 	"github.com/gradientsearch/gus/business/domain/conversationbus"
 	"github.com/gradientsearch/gus/business/domain/dialogbus"
-	"github.com/gradientsearch/gus/business/domain/userbus"
 	"github.com/gradientsearch/gus/business/sdk/sqldb"
 	"github.com/gradientsearch/gus/foundation/logger"
 	"github.com/gradientsearch/gus/foundation/web"
@@ -17,12 +16,12 @@ import (
 
 // Config contains all the mandatory systems required by handlers.
 type Config struct {
-	Log             *logger.Logger
-	DB              *sqlx.DB
-	UserBus         *userbus.Business
+	Log        *logger.Logger
+	DB         *sqlx.DB
+	AuthClient *authclient.Client
+
 	ConversationBus *conversationbus.Business
 	DialogBus       *dialogbus.Business
-	AuthClient      *authclient.Client
 }
 
 // Routes adds specific routes for this group.
